@@ -22,6 +22,8 @@ For v0.0.4, page display uses Wry, a cross-platform wrapper around each operatin
 
 For v0.0.5, the app keeps the same `eframe` window and address bar while adding back, forward, and reload controls. The controls query and use the WebView's own navigation history so link clicks and page navigations stay in sync. The address field follows the current page, and a bare domain becomes `https://...`. DuckDuckGo is the start page, and the initial window size is 1800×1100 logical pixels. This remains a small prototype and relies on the platform WebView for page rendering.
 
+For v0.0.7, the address bar keeps explicit HTTP/HTTPS URLs and recognized domains as direct navigation. Public domains default to HTTPS; `localhost` and loopback IP addresses default to HTTP so local development servers work without TLS. Other text becomes a DuckDuckGo search query, with query characters percent-encoded for the URL. Search text, public domains, and `localhost:8765` were manually verified on macOS.
+
 ## Platform goals
 
 The application should run on macOS, Linux, and Windows. Shared code should be preferred where practical. Platform-specific behavior may be needed for operating-system APIs and packaging. Linux support must account for both X11 and Wayland environments where practical.
@@ -44,6 +46,12 @@ Longer-term areas include:
 ## Privacy model
 
 The intended default is temporary browsing state: no history, persistent cookies, persistent cache, or persistent website storage; no account, sync, telemetry, or tracking. Local bookmarks are an explicit exception. Wry incognito mode is enabled. The restart check on macOS found no cookie, `localStorage`, or Cache API marker, and the cacheable HTTP resource was requested from the server again after restart. Windows/Linux remain unverified. See [the privacy check](privacy-check.md).
+
+## Planned browser behavior
+
+The address bar now navigates directly for recognized URLs and domains, and sends other text to DuckDuckGo as a search; this v0.0.7 behavior is verified on macOS. Bookmarks will be stored locally as an intentional exception to temporary browsing data. New tabs will offer a user choice between a bookmarks page and DuckDuckGo. The bookmark and new-tab features are not implemented yet.
+
+Password-manager support is a later investigation. Wry hosts an operating-system WebView rather than a standard Chrome or Firefox browser, so compatibility with existing password-manager extensions cannot be assumed.
 
 ## Performance and compatibility
 

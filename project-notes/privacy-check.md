@@ -10,11 +10,14 @@ From the project root, start the test server in a terminal:
 python3 tools/privacy_check_server.py
 ```
 
-Keep that terminal open. In Dark Horse, open:
+Keep that terminal open. In Dark Horse, open either local address:
 
 ```text
 http://127.0.0.1:8765/
+http://localhost:8765/
 ```
+
+The test server listens on both IPv4 and IPv6 loopback addresses when IPv6 is available. It is not exposed to other devices on the network.
 
 The page reports whether it found a cookie, a `localStorage` value, and a Cache API entry when it opened. Click **Store test data**, then click **Request cacheable resource** once. The server terminal should print a `GET /cache-probe` request.
 

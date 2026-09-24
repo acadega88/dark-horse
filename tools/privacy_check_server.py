@@ -1,8 +1,14 @@
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import socket
+import threading
 
 
 PAGE = Path(__file__).with_name("privacy-check.html")
+
+
+class IPv6ThreadingHTTPServer(ThreadingHTTPServer):
+    address_family = socket.AF_INET6
 
 
 class PrivacyCheckHandler(BaseHTTPRequestHandler):
@@ -28,6 +34,15 @@ class PrivacyCheckHandler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    address = ("127.0.0.1", 8765)
-    print(f"Privacy check server: http://{address[0]}:{address[1]}/")
-    ThreadingHTTPServer(address, PrivacyCheckHandler).serve_forever()
+    port = 8765
+    ipv4_server = ThreadingHTTPServer(("127.0.0.1", port), PrivacyCheckHandler)
+    print(f"Privacy check server (IPv4): http://127.0.0.1:{port}/")
+
+    try:
+        ipv6_server = IPv6ThreadingHTTPServer(("::1", port), PrivacyCheckHandler)
+        threading.Thread(target=ipv6_server.serve_forever, daemon=True).start()
+        print(f"Privacy check server (IPv6): http://[::1]:{port}/")
+    except OSError as error:
+        print(f"IPv6 loopback is unavailable; localhost may only work over IPv4 ({error}).")
+
+    ipv4_server.serve_forever()

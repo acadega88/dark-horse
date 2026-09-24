@@ -50,6 +50,10 @@ This egui widget provides one editable line of text, including normal cursor mov
 
 HTTP is a protocol for requesting and receiving web resources. HTTPS is HTTP protected with TLS encryption. A URL normally includes its scheme, such as `https://`. Dark Horse currently adds `https://` when the user enters a bare domain such as `google.com`; explicit HTTP and HTTPS schemes are kept as entered.
 
+### Address-bar search
+
+A browser address bar can accept both destinations and search text. Dark Horse opens explicit HTTP/HTTPS URLs and recognizable domains directly and sends other text to DuckDuckGo. The current rule recognizes dotted domains, `localhost`, and IP addresses, including ports. Public domains default to HTTPS, while `localhost` and loopback IPs default to HTTP so local development servers work without TLS. This keeps inputs such as `rust ownership` as searches while preserving addresses such as `localhost:8765`.
+
 ### HTTP status code
 
 An HTTP status is the server's response to a request, such as `200 OK` or `404 Not Found`. Receiving a status means the HTTP exchange succeeded, but the status may still indicate that the requested page was not found. A network error, such as a timeout or DNS failure, means the app did not receive an HTTP response.
@@ -73,6 +77,10 @@ A WebView displays web pages using an existing web engine. Wry provides a Rust i
 ### Incognito WebView mode
 
 Wry provides an incognito option that Dark Horse enables. On macOS, a restart check found no cookie, `localStorage`, or Cache API marker after closing and reopening the app, and the cacheable HTTP resource was requested from the server again after restart. Checks on other target platforms remain pending. Enabling the option is not the same as verifying the privacy behavior. On Windows, Wry requires WebView2 Runtime 101.0.1210.39 or newer; older runtimes ignore this option.
+
+### Bookmarks
+
+Bookmarks are saved references to pages that the user chooses to keep. Dark Horse intends to store bookmarks locally, even though temporary browsing data such as cookies and site storage is cleared on exit. A new tab will be configurable to show bookmarks or DuckDuckGo.
 
 ### Cookies, site storage, and HTTP cache
 
