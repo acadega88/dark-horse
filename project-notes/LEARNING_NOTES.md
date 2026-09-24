@@ -72,7 +72,11 @@ A WebView displays web pages using an existing web engine. Wry provides a Rust i
 
 ### Incognito WebView mode
 
-Wry provides an incognito option that Dark Horse enables. The project still needs to verify that cookies, cache, and website storage do not remain after closing the app on each target platform. Enabling the option is not the same as verifying the privacy behavior.
+Wry provides an incognito option that Dark Horse enables. On macOS, a restart check found no cookie, `localStorage`, or Cache API marker after closing and reopening the app, and the cacheable HTTP resource was requested from the server again after restart. Checks on other target platforms remain pending. Enabling the option is not the same as verifying the privacy behavior. On Windows, Wry requires WebView2 Runtime 101.0.1210.39 or newer; older runtimes ignore this option.
+
+### Cookies, site storage, and HTTP cache
+
+Cookies and `localStorage` are common ways a website can keep data between visits. The Cache API is site-controlled storage for responses. The HTTP cache is a separate browser feature that may reuse a recent response without asking the server again. Dark Horse's local privacy check probes these separately so a successful cookie check is not mistaken for proof about every kind of cache.
 
 ### WebView navigation history
 
