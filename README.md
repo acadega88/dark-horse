@@ -13,11 +13,11 @@ Dark Horse is a long-term personal project to build a small, fast, privacy-focus
 
 ## Platforms and technology
 
-The target platforms are macOS, Linux, and Windows. The main language is Rust. The first window prototype uses `winit` directly. For the v0.0.2 browser UI prototype, the project has added `eframe`/`egui` to provide cross-platform widgets. A web rendering engine has not yet been selected.
+The target platforms are macOS, Linux, and Windows. The main language is Rust. The v0.0.2 browser UI uses `eframe`/`egui` to provide cross-platform widgets. A web rendering engine has not yet been selected.
 
 ## Current status
 
-Milestones v0.0.1 and v0.0.2 are complete on macOS: the application opens a window and shows an editable address field using `eframe`/`egui`. Linux and Windows have not been verified yet. The address field does not navigate yet; that is the next milestone.
+Milestones v0.0.1 through v0.0.3 are complete on macOS: the application opens a window, provides an address field, and makes basic HTTP/HTTPS requests. Entering a domain such as `google.com` defaults to HTTPS. The app shows the final response address and HTTP status, but does not render the page yet. Linux and Windows have not been verified yet.
 
 ## Run
 

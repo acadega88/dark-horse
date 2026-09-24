@@ -44,7 +44,27 @@ The address is stored in a `String`, which can hold text that changes while the 
 
 ### `TextEdit::singleline`
 
-This egui widget provides one editable line of text, including normal cursor movement, selection, and text input. In v0.0.2 it only collects an address; it does not start a network request.
+This egui widget provides one editable line of text, including normal cursor movement, selection, and text input. The app reads its value to start a network request when Enter is pressed or the Go button is clicked.
+
+### HTTP and HTTPS
+
+HTTP is a protocol for requesting and receiving web resources. HTTPS is HTTP protected with TLS encryption. A URL normally includes its scheme, such as `https://`. Dark Horse currently adds `https://` when the user enters a bare domain such as `google.com`; explicit HTTP and HTTPS schemes are kept as entered.
+
+### HTTP status code
+
+An HTTP status is the server's response to a request, such as `200 OK` or `404 Not Found`. Receiving a status means the HTTP exchange succeeded, but the status may still indicate that the requested page was not found. A network error, such as a timeout or DNS failure, means the app did not receive an HTTP response.
+
+### Blocking request and worker thread
+
+A blocking request waits for the server's response before that operation can continue. Running it on the UI thread could make the window stop responding while the network is slow. Dark Horse starts the blocking request on a separate standard-library thread, with a 20-second timeout.
+
+### Channel (`std::sync::mpsc`)
+
+A channel lets separate threads pass a value safely. The worker thread sends the request result through a channel, and the UI checks for that result without waiting. `mpsc` means multiple producers and one consumer; this app currently uses one UI receiver for navigation results.
+
+### HTTP client and cookies
+
+The `reqwest::blocking::Client` sends HTTP requests and manages connection details. The app reuses a client and does not enable Reqwest's optional cookie store. This prototype does not yet display page contents or implement the full temporary-storage policy.
 
 ### `CentralPanel`
 

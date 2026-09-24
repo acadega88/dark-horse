@@ -22,6 +22,14 @@ Use `winit` for the first window prototype. It provides cross-platform window cr
 
 Use `eframe` with `egui` for the v0.0.2 browser UI prototype, beginning with an editable address field. It provides cross-platform widgets and handles the app window, input, and rendering, avoiding a custom text-input and drawing system at this stage. This changes the prototype's UI framework; it does not select the web page rendering engine. The existing direct `winit` window code still needs to be migrated.
 
+## 2026-09-24 — HTTP client: reqwest on a worker thread
+
+Use `reqwest`'s blocking client for the first HTTP/HTTPS requests, and run it on a standard-library worker thread so a slow response does not freeze the UI. This avoids introducing an async runtime for the first navigation step. Use Rustls for HTTPS and do not enable a cookie store. This is a prototype networking choice; it does not select the future browser engine or its full networking architecture.
+
+## 2026-09-24 — Bare domains default to HTTPS
+
+When the address field contains a domain without a URL scheme, prepend `https://`. Keep explicitly entered `http://` and `https://` schemes. This makes common address-bar input convenient while leaving a later opportunity to add search queries and more complete URL handling.
+
 ## 2026-09-24 — Development and learning approach
 
 Keep implementation incremental. Explain important concepts and architectural choices before adding them. The project owner prefers to install and run tools through the terminal, with step-by-step instructions.
