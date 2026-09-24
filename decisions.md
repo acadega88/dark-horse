@@ -30,9 +30,17 @@ Use `reqwest`'s blocking client for the first HTTP/HTTPS requests, and run it on
 
 Use Wry to display real web pages with the operating system's WebView, initially embedding it in the existing `eframe` window while keeping the address controls in `egui`. Enable Wry's incognito option for the prototype. This avoids implementing an HTML/CSS/JavaScript engine from scratch. The platform engines differ, and ephemeral data behavior must be verified; Linux/Wayland needs a GTK-based integration beyond the initial child-view approach.
 
+## 2026-09-24 — Browser navigation prototype: back, forward, and reload
+
+Add compact icon controls to the `eframe` UI while keeping the existing child WebView. Back and forward availability comes from the WebView's native history, and reload uses the WebView reload method. The address field stays synchronized with the current page. The WebView owns navigation history; Dark Horse does not maintain a duplicate history list.
+
 ## 2026-09-24 — Bare domains default to HTTPS
 
 When the address field contains a domain without a URL scheme, prepend `https://`. Keep explicitly entered `http://` and `https://` schemes. This makes common address-bar input convenient while leaving a later opportunity to add search queries and more complete URL handling.
+
+## 2026-09-24 — Default start page: DuckDuckGo
+
+Open DuckDuckGo when Dark Horse starts. This gives the prototype a useful initial page while Google repeatedly presents a traffic-verification challenge in the current WebView setup. The start page can be revisited after broader compatibility testing.
 
 ## 2026-09-24 — Development and learning approach
 

@@ -12,13 +12,83 @@ struct BrowserApp {
     load_event_receiver: Receiver<(PageLoadEvent, String)>,
 }
 
+#[derive(Clone, Copy)]
+enum NavigationIcon {
+    Back,
+    Forward,
+    Reload,
+}
+
+fn navigation_button(
+    ui: &mut egui::Ui,
+    icon: NavigationIcon,
+    enabled: bool,
+) -> egui::Response {
+    let response = ui.add_enabled(
+        enabled,
+        egui::Button::new("").min_size(egui::vec2(34.0, 32.0)),
+    );
+    let color = if enabled {
+        ui.visuals().text_color()
+    } else {
+        ui.visuals().weak_text_color()
+    };
+    let stroke = egui::Stroke::new(1.8, color);
+    let center = response.rect.center();
+    let painter = ui.painter();
+
+    match icon {
+        NavigationIcon::Back => {
+            let tip = egui::pos2(center.x - 5.0, center.y);
+            painter.line_segment(
+                [egui::pos2(center.x + 5.0, center.y), tip],
+                stroke,
+            );
+            painter.line_segment(
+                [tip, egui::pos2(center.x + 1.0, center.y - 5.0)],
+                stroke,
+            );
+            painter.line_segment(
+                [tip, egui::pos2(center.x + 1.0, center.y + 5.0)],
+                stroke,
+            );
+        }
+        NavigationIcon::Forward => {
+            let tip = egui::pos2(center.x + 5.0, center.y);
+            painter.line_segment(
+                [egui::pos2(center.x - 5.0, center.y), tip],
+                stroke,
+            );
+            painter.line_segment(
+                [tip, egui::pos2(center.x - 1.0, center.y - 5.0)],
+                stroke,
+            );
+            painter.line_segment(
+                [tip, egui::pos2(center.x - 1.0, center.y + 5.0)],
+                stroke,
+            );
+        }
+        NavigationIcon::Reload => {
+            painter.text(
+                center,
+                egui::Align2::CENTER_CENTER,
+                "↻",
+                egui::FontId::proportional(20.0),
+                color,
+            );
+        }
+    }
+
+    response
+}
+
 impl Default for BrowserApp {
     fn default() -> Self {
         let (load_event_sender, load_event_receiver) = mpsc::channel();
 
         Self {
-            address: String::new(),
-            status_message: "Enter an HTTP or HTTPS address.".to_owned(),
+            address: "https://duckduckgo.com".to_owned(),
+            status_message: "Opening DuckDuckGo…".to_owned(),
             webview: None,
             load_event_sender,
             load_event_receiver,
@@ -27,29 +97,85 @@ impl Default for BrowserApp {
 }
 
 impl BrowserApp {
-    fn start_navigation(&mut self) {
-        let entered_address = self.address.trim();
+    fn normalize_address(address: &str) -> Result<String, String> {
+        let entered_address = address.trim();
 
         if entered_address.is_empty() {
-            self.status_message = "Enter an HTTP or HTTPS address first.".to_owned();
-            return;
+            return Err("Enter an HTTP or HTTPS address first.".to_owned());
         }
 
-        let address = match entered_address.split_once("://") {
+        match entered_address.split_once("://") {
             Some((scheme, _))
                 if scheme.eq_ignore_ascii_case("http")
                     || scheme.eq_ignore_ascii_case("https") =>
             {
-                entered_address.to_owned()
+                Ok(entered_address.to_owned())
             }
-            Some(_) => {
-                self.status_message = "Only HTTP and HTTPS addresses are supported.".to_owned();
-                return;
+            Some(_) => Err("Only HTTP and HTTPS addresses are supported.".to_owned()),
+            None => Ok(format!("https://{entered_address}")),
+        }
+    }
+
+    fn can_go_back(&self) -> bool {
+        self.webview
+            .as_ref()
+            .and_then(|webview| webview.can_go_back().ok())
+            .unwrap_or(false)
+    }
+
+    fn can_go_forward(&self) -> bool {
+        self.webview
+            .as_ref()
+            .and_then(|webview| webview.can_go_forward().ok())
+            .unwrap_or(false)
+    }
+
+    fn go_back_in_history(&mut self) {
+        if !self.can_go_back() {
+            return;
+        }
+
+        if let Some(webview) = &self.webview {
+            match webview.go_back() {
+                Ok(()) => self.status_message = "Going back…".to_owned(),
+                Err(error) => self.status_message = format!("Could not go back: {error}"),
             }
-            None => format!("https://{entered_address}"),
+        }
+    }
+
+    fn go_forward_in_history(&mut self) {
+        if !self.can_go_forward() {
+            return;
+        }
+
+        if let Some(webview) = &self.webview {
+            match webview.go_forward() {
+                Ok(()) => self.status_message = "Going forward…".to_owned(),
+                Err(error) => self.status_message = format!("Could not go forward: {error}"),
+            }
+        }
+    }
+
+    fn reload_page(&mut self) {
+        let Some(webview) = &self.webview else {
+            self.status_message = "The web page view is not available.".to_owned();
+            return;
         };
 
-        self.address = address.clone();
+        match webview.reload() {
+            Ok(()) => self.status_message = format!("Reloading {}…", self.address),
+            Err(error) => self.status_message = format!("Could not reload page: {error}"),
+        }
+    }
+
+    fn start_navigation(&mut self) {
+        let address = match BrowserApp::normalize_address(&self.address) {
+            Ok(address) => address,
+            Err(error) => {
+                self.status_message = error;
+                return;
+            }
+        };
 
         let Some(webview) = &self.webview else {
             self.status_message = "The web page view is not available.".to_owned();
@@ -94,6 +220,24 @@ impl eframe::App for BrowserApp {
 
         egui::CentralPanel::default().show(ui, |ui| {
             ui.horizontal(|ui| {
+                let back = navigation_button(ui, NavigationIcon::Back, self.can_go_back());
+                if back.clicked() {
+                    self.go_back_in_history();
+                }
+
+                let forward =
+                    navigation_button(ui, NavigationIcon::Forward, self.can_go_forward());
+                if forward.clicked() {
+                    self.go_forward_in_history();
+                }
+
+                let reload =
+                    navigation_button(ui, NavigationIcon::Reload, self.webview.is_some());
+                if reload.clicked() {
+                    self.reload_page();
+                }
+
+                ui.add_space(8.0);
                 ui.label("Address:");
 
                 let address_field = ui.add(
@@ -111,12 +255,16 @@ impl eframe::App for BrowserApp {
             });
 
             ui.separator();
-            ui.label(&self.status_message);
-            ui.separator();
 
             let available = ui.available_rect_before_wrap();
             ui.allocate_rect(available, egui::Sense::hover());
             page_area = Some(available);
+
+            ui.separator();
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("Status:").small());
+                ui.label(egui::RichText::new(&self.status_message).italics());
+            });
         });
 
         if let Some(page_area) = page_area {
@@ -127,7 +275,7 @@ impl eframe::App for BrowserApp {
                 let context = context.clone();
 
                 match WebViewBuilder::new()
-                    .with_url("about:blank")
+                    .with_url("https://duckduckgo.com")
                     .with_incognito(true)
                     .with_on_page_load_handler(move |event, address| {
                         let _ = load_event_sender.send((event, address));
@@ -156,9 +304,28 @@ impl eframe::App for BrowserApp {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn normalize_address_defaults_bare_domains_to_https() {
+        assert_eq!(
+            BrowserApp::normalize_address("example.com"),
+            Ok("https://example.com".to_owned())
+        );
+    }
+
+    #[test]
+    fn normalize_address_rejects_non_http_schemes() {
+        assert!(BrowserApp::normalize_address("ftp://example.com").is_err());
+    }
+
+}
+
 fn main() -> eframe::Result {
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([800.0, 600.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([1800.0, 1100.0]),
         ..Default::default()
     };
 

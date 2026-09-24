@@ -18,6 +18,8 @@ For v0.0.3, the selected networking approach is `reqwest` with its blocking HTTP
 
 For v0.0.4, page display uses Wry, a cross-platform wrapper around each operating system's WebView. The existing `eframe`/`egui` address controls remain in the app window, with the WebView embedded below them as a child view. Google and YouTube have been opened successfully on macOS. The WebView is configured for incognito mode, but temporary-only storage behavior has not yet been verified. Wry's child-view approach works on macOS, Windows, and Linux/X11; Linux/Wayland needs a GTK-based integration and remains to be addressed. Page rendering and engine behavior come from the OS and may differ between platforms.
 
+For v0.0.5, the app keeps the same `eframe` window and address bar while adding back, forward, and reload controls. The controls query and use the WebView's own navigation history so link clicks and page navigations stay in sync. The address field follows the current page, and a bare domain becomes `https://...`. DuckDuckGo is the start page, and the initial window size is 1100×800 logical pixels. This remains a small prototype and relies on the platform WebView for page rendering.
+
 ## Platform goals
 
 The application should run on macOS, Linux, and Windows. Shared code should be preferred where practical. Platform-specific behavior may be needed for operating-system APIs and packaging. Linux support must account for both X11 and Wayland environments where practical.
