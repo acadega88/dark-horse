@@ -17,7 +17,7 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. B
 
 ## Current status
 
-Milestones v0.0.1 through v0.0.6 are complete on macOS. The privacy restart check confirmed that cookies, `localStorage`, Cache API data, and the cacheable HTTP response do not persist after Dark Horse closes. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, accepts an address, defaults bare domains to HTTPS, displays real pages through Wry, and provides back, forward, and reload controls. Google and YouTube have been tried successfully. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
+Milestones v0.0.1 through v0.0.7 are complete on macOS. The privacy restart check confirmed that cookies, `localStorage`, Cache API data, and the cacheable HTTP response do not persist after Dark Horse closes. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, sends non-URL address-bar text to DuckDuckGo, opens domains directly, and provides back, forward, and reload controls. Bare public domains default to HTTPS; `localhost` and loopback IP addresses default to HTTP. Google and YouTube have been tried successfully. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
 
 The code is organized into `src/main.rs` for startup, `src/browser_app.rs` for browser state and UI, and `src/icons.rs` for navigation icons.
 

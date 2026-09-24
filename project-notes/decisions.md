@@ -36,7 +36,7 @@ Add compact icon controls to the `eframe` UI while keeping the existing child We
 
 ## 2026-09-24 — Bare domains default to HTTPS
 
-When the address field contains a domain without a URL scheme, prepend `https://`. Keep explicitly entered `http://` and `https://` schemes. This makes common address-bar input convenient while leaving a later opportunity to add search queries and more complete URL handling.
+When the address field contains a public domain without a URL scheme, prepend `https://`. Use `http://` for `localhost` and loopback IP addresses, which commonly serve local development pages without TLS. Keep explicitly entered `http://` and `https://` schemes. Non-URL text is searched with DuckDuckGo (added in v0.0.7).
 
 ## 2026-09-24 — Default start page: DuckDuckGo
 
@@ -53,3 +53,19 @@ Keep implementation incremental. Explain important concepts and architectural ch
 ## 2026-09-24 — Git practice by milestone
 
 Use a separate branch for each milestone (for example, `feature/v0.0.1-window`), then push it, open a pull request into `main`, merge it, and pull the updated `main` branch locally. This gives the project owner regular practice with Git while keeping milestone work reviewable.
+
+## 2026-09-25 — Search queries from the address bar
+
+If address-bar input is not recognized as a URL or domain, search for it with DuckDuckGo. Keep direct navigation for explicit HTTP/HTTPS URLs and recognizable bare domains. This makes the address bar useful for both navigation and search while keeping DuckDuckGo as the chosen search provider.
+
+## 2026-09-25 — Local bookmarks and new-tab page
+
+Add local bookmarks as a deliberate persistence exception to the temporary browsing-data policy. Let the user choose whether a new tab shows saved bookmarks or opens DuckDuckGo. Keep this choice about new tabs; the current browser startup page remains DuckDuckGo unless changed separately later.
+
+## 2026-09-25 — Platform testing order
+
+Continue development and verification on macOS for now. Windows and Linux remain target platforms, but testing them is postponed until a suitable personal test environment is available; lack of those machines does not block macOS milestones. Do not claim support on a platform before testing it.
+
+## 2026-09-25 — Password-manager direction
+
+Treat password-manager support as a later feature. Evaluate established open-source password managers and their integration options before implementation. Do not create a custom password vault or cryptography as a first step; verify that any proposed browser integration works with Wry and meets the project's privacy goals.

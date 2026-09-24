@@ -43,8 +43,103 @@ impl BrowserApp {
                 Ok(entered_address.to_owned())
             }
             Some(_) => Err("Only HTTP and HTTPS addresses are supported.".to_owned()),
-            None => Ok(format!("https://{entered_address}")),
+            None if Self::looks_like_url(entered_address) => {
+                let scheme = if Self::is_loopback_address(entered_address) {
+                    "http"
+                } else {
+                    "https"
+                };
+                Ok(format!("{scheme}://{entered_address}"))
+            }
+            None => Ok(format!(
+                "https://duckduckgo.com/?q={}",
+                Self::encode_search_query(entered_address)
+            )),
         }
+    }
+
+    fn looks_like_url(input: &str) -> bool {
+        if input.chars().any(char::is_whitespace) {
+            return false;
+        }
+
+        let authority = input.split(['/', '?', '#']).next().unwrap_or_default();
+        if authority.is_empty() || authority.contains('@') {
+            return false;
+        }
+
+        if let Some(bracketed_host) = authority.strip_prefix('[') {
+            return bracketed_host
+                .split_once(']')
+                .is_some_and(|(host, suffix)| {
+                    host.parse::<std::net::Ipv6Addr>().is_ok()
+                        && (suffix.is_empty()
+                            || suffix
+                                .strip_prefix(':')
+                                .is_some_and(|port| port.parse::<u16>().is_ok()))
+                });
+        }
+
+        let host = match authority.rsplit_once(':') {
+            Some((host, port)) if port.parse::<u16>().is_ok() => host,
+            _ => authority,
+        };
+
+        if host.eq_ignore_ascii_case("localhost") || host.parse::<std::net::Ipv4Addr>().is_ok() {
+            return true;
+        }
+
+        host.contains('.')
+            && host.split('.').all(|label| {
+                !label.is_empty()
+                    && !label.starts_with('-')
+                    && !label.ends_with('-')
+                    && label
+                        .chars()
+                        .all(|character| character.is_alphanumeric() || character == '-')
+            })
+    }
+
+    fn is_loopback_address(input: &str) -> bool {
+        let authority = input.split(['/', '?', '#']).next().unwrap_or_default();
+
+        if let Some(bracketed_host) = authority.strip_prefix('[') {
+            return bracketed_host.split_once(']').is_some_and(|(host, _)| {
+                host.parse::<std::net::Ipv6Addr>()
+                    .is_ok_and(|address| address.is_loopback())
+            });
+        }
+
+        let host = match authority.rsplit_once(':') {
+            Some((host, port)) if port.parse::<u16>().is_ok() => host,
+            _ => authority,
+        };
+
+        host.eq_ignore_ascii_case("localhost")
+            || host
+                .parse::<std::net::Ipv4Addr>()
+                .is_ok_and(|address| address.is_loopback())
+    }
+
+    fn encode_search_query(query: &str) -> String {
+        const HEX: &[u8; 16] = b"0123456789ABCDEF";
+        let mut encoded = String::with_capacity(query.len());
+
+        for byte in query.bytes() {
+            match byte {
+                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'*' | b'-' | b'.' | b'_' => {
+                    encoded.push(char::from(byte));
+                }
+                b' ' => encoded.push('+'),
+                _ => {
+                    encoded.push('%');
+                    encoded.push(char::from(HEX[usize::from(byte >> 4)]));
+                    encoded.push(char::from(HEX[usize::from(byte & 0x0f)]));
+                }
+            }
+        }
+
+        encoded
     }
 
     fn can_go_back(&self) -> bool {
