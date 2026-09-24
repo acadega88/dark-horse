@@ -26,6 +26,10 @@ Use `eframe` with `egui` for the v0.0.2 browser UI prototype, beginning with an 
 
 Use `reqwest`'s blocking client for the first HTTP/HTTPS requests, and run it on a standard-library worker thread so a slow response does not freeze the UI. This avoids introducing an async runtime for the first navigation step. Use Rustls for HTTPS and do not enable a cookie store. This is a prototype networking choice; it does not select the future browser engine or its full networking architecture.
 
+## 2026-09-24 — Initial page display: Wry WebView
+
+Use Wry to display real web pages with the operating system's WebView, initially embedding it in the existing `eframe` window while keeping the address controls in `egui`. Enable Wry's incognito option for the prototype. This avoids implementing an HTML/CSS/JavaScript engine from scratch. The platform engines differ, and ephemeral data behavior must be verified; Linux/Wayland needs a GTK-based integration beyond the initial child-view approach.
+
 ## 2026-09-24 — Bare domains default to HTTPS
 
 When the address field contains a domain without a URL scheme, prepend `https://`. Keep explicitly entered `http://` and `https://` schemes. This makes common address-bar input convenient while leaving a later opportunity to add search queries and more complete URL handling.

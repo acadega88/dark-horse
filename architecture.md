@@ -12,9 +12,11 @@ Cargo.lock        Exact dependency versions selected by Cargo
 
 The initial application is a normal Rust executable. The v0.0.1 prototype uses `winit` directly to create a native window and handle events; it opens and closes on macOS. Linux and Windows have not been verified yet. `winit` does not provide widgets or draw window contents.
 
-For v0.0.2, the app migrated to `eframe`/`egui` for browser UI controls. `eframe` supplies the app framework and renderer; `egui` supplies widgets. The prototype shows an editable address field on macOS. The web page rendering engine remains undecided and separate from the browser's own controls.
+For v0.0.2, the app migrated to `eframe`/`egui` for browser UI controls. `eframe` supplies the app framework and renderer; `egui` supplies widgets. The prototype shows an editable address field on macOS.
 
 For v0.0.3, the selected networking approach is `reqwest` with its blocking HTTP client running on a standard-library worker thread. This avoids adding an async runtime while keeping network waits off the UI thread. The app uses a 20-second request timeout, defaults bare domains to HTTPS, and displays the final response address and HTTP status. HTTPS uses Rustls. No cookie-store feature is enabled; website rendering is a later stage.
+
+For v0.0.4, page display uses Wry, a cross-platform wrapper around each operating system's WebView. The existing `eframe`/`egui` address controls remain in the app window, with the WebView embedded below them as a child view. Google and YouTube have been opened successfully on macOS. The WebView is configured for incognito mode, but temporary-only storage behavior has not yet been verified. Wry's child-view approach works on macOS, Windows, and Linux/X11; Linux/Wayland needs a GTK-based integration and remains to be addressed. Page rendering and engine behavior come from the OS and may differ between platforms.
 
 ## Platform goals
 
@@ -22,7 +24,7 @@ The application should run on macOS, Linux, and Windows. Shared code should be p
 
 ## Browser components
 
-No browser engine or rendering architecture has been selected. A complete modern browser engine is far beyond the first prototype, so the project will evaluate which parts are educational and practical to implement and which parts should use established components.
+The project uses Wry to host the operating system's WebView engine. A complete modern browser engine is far beyond the first prototype, so Dark Horse uses this established component for page layout and rendering while its own browser controls and privacy behavior remain project responsibilities.
 
 Longer-term areas include:
 

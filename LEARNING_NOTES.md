@@ -64,7 +64,15 @@ A channel lets separate threads pass a value safely. The worker thread sends the
 
 ### HTTP client and cookies
 
-The `reqwest::blocking::Client` sends HTTP requests and manages connection details. The app reuses a client and does not enable Reqwest's optional cookie store. This prototype does not yet display page contents or implement the full temporary-storage policy.
+In v0.0.3, `reqwest::blocking::Client` sent HTTP requests and managed connection details. The app reused a client and did not enable Reqwest's optional cookie store. Wry now performs page navigation through the platform WebView; the earlier Reqwest code is no longer used by the app.
+
+### WebView and Wry
+
+A WebView displays web pages using an existing web engine. Wry provides a Rust interface to the platform WebView; the operating system supplies the HTML, CSS, and JavaScript implementation. Dark Horse keeps its address controls in egui and places the WebView below them. Since the engine is supplied by the OS, its version and behavior can differ between platforms.
+
+### Incognito WebView mode
+
+Wry provides an incognito option that Dark Horse enables. The project still needs to verify that cookies, cache, and website storage do not remain after closing the app on each target platform. Enabling the option is not the same as verifying the privacy behavior.
 
 ### `CentralPanel`
 
