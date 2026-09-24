@@ -19,6 +19,8 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. B
 
 Milestones v0.0.1 through v0.0.5 are complete on macOS. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, accepts an address, defaults bare domains to HTTPS, displays real pages through Wry, and provides back, forward, and reload controls. Google and YouTube have been tried successfully. The WebView's incognito option is enabled, but temporary-only storage behavior has not been verified. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
 
+The code is organized into `src/main.rs` for startup, `src/browser_app.rs` for browser state and UI, and `src/icons.rs` for navigation icons.
+
 ## Run
 
 From the project directory, use the terminal:

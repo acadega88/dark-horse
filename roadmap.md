@@ -24,3 +24,7 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 Local bookmarks, multiple windows, additional security hardening, developer tools, performance work, and release packaging for macOS, Linux, and Windows.
 
 The sequence may change as we learn what is practical. Dark Horse currently relies on system WebView engines rather than building a complete modern browser engine from scratch; rendering and behavior can differ between platforms.
+
+## Maintenance completed
+
+- Split the application entry point, browser UI/state, and navigation icon drawing into separate Rust modules after v0.0.5. This is code organization work, not a new browser feature milestone.

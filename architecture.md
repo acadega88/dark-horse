@@ -5,9 +5,11 @@ This document records the architecture as it is understood today. It is intentio
 ## Current shape
 
 ```text
-src/main.rs       Application entry point
-Cargo.toml        Package metadata and Rust dependencies
-Cargo.lock        Exact dependency versions selected by Cargo
+src/main.rs        Application entry point and startup window options
+src/browser_app.rs BrowserApp state, address handling, navigation, and UI
+src/icons.rs       Drawing for the back, forward, and reload controls
+Cargo.toml         Package metadata and Rust dependencies
+Cargo.lock         Exact dependency versions selected by Cargo
 ```
 
 The initial application is a normal Rust executable. The v0.0.1 prototype uses `winit` directly to create a native window and handle events; it opens and closes on macOS. Linux and Windows have not been verified yet. `winit` does not provide widgets or draw window contents.
@@ -18,7 +20,7 @@ For v0.0.3, the selected networking approach is `reqwest` with its blocking HTTP
 
 For v0.0.4, page display uses Wry, a cross-platform wrapper around each operating system's WebView. The existing `eframe`/`egui` address controls remain in the app window, with the WebView embedded below them as a child view. Google and YouTube have been opened successfully on macOS. The WebView is configured for incognito mode, but temporary-only storage behavior has not yet been verified. Wry's child-view approach works on macOS, Windows, and Linux/X11; Linux/Wayland needs a GTK-based integration and remains to be addressed. Page rendering and engine behavior come from the OS and may differ between platforms.
 
-For v0.0.5, the app keeps the same `eframe` window and address bar while adding back, forward, and reload controls. The controls query and use the WebView's own navigation history so link clicks and page navigations stay in sync. The address field follows the current page, and a bare domain becomes `https://...`. DuckDuckGo is the start page, and the initial window size is 1100×800 logical pixels. This remains a small prototype and relies on the platform WebView for page rendering.
+For v0.0.5, the app keeps the same `eframe` window and address bar while adding back, forward, and reload controls. The controls query and use the WebView's own navigation history so link clicks and page navigations stay in sync. The address field follows the current page, and a bare domain becomes `https://...`. DuckDuckGo is the start page, and the initial window size is 1800×1100 logical pixels. This remains a small prototype and relies on the platform WebView for page rendering.
 
 ## Platform goals
 
