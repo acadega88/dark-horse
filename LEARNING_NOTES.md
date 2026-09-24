@@ -38,6 +38,18 @@ A Rust library for creating windows and receiving operating-system events such a
 
 The application waits for events from the operating system and responds to them. For example, it may redraw after a resize or close the window after a close request. This is the basic pattern used by many graphical applications.
 
+### `ApplicationHandler`
+
+In `winit`, this trait describes methods the application provides so the event loop can notify it about lifecycle changes and window events. Our `App` implements it; `resumed` creates the window, and `window_event` handles events sent to that window.
+
+### `Option<Window>`
+
+`Option<T>` is a Rust type that represents either `Some(value)` or `None`. The app starts with no window (`None`) and stores the created window in `Some(window)`. Keeping the window in `App` keeps it alive while the application runs.
+
+### Close request
+
+The operating system sends `WindowEvent::CloseRequested` when the user asks to close a window. Calling `event_loop.exit()` tells `winit` that the application should stop its event loop.
+
 ## Build output
 
 ### `target/`
