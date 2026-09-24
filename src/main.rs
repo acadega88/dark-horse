@@ -1,53 +1,33 @@
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::time::Duration;
 
 use eframe::egui;
-use reqwest::blocking::Client;
-
-struct NavigationResult {
-    address: String,
-    status: String,
-}
+use wry::dpi::{LogicalPosition, LogicalSize};
+use wry::{PageLoadEvent, Rect as WebViewRect, WebView, WebViewBuilder};
 
 struct BrowserApp {
     address: String,
     status_message: String,
-    loading: bool,
-    client: Option<Client>,
-    client_error: Option<String>,
-    result_sender: Sender<Result<NavigationResult, String>>,
-    result_receiver: Receiver<Result<NavigationResult, String>>,
+    webview: Option<WebView>,
+    load_event_sender: Sender<(PageLoadEvent, String)>,
+    load_event_receiver: Receiver<(PageLoadEvent, String)>,
 }
 
 impl Default for BrowserApp {
     fn default() -> Self {
-        let (result_sender, result_receiver) = mpsc::channel();
-        let client_result = Client::builder()
-            .timeout(Duration::from_secs(20))
-            .build();
-
-        let (client, client_error, status_message) = match client_result {
-            Ok(client) => (Some(client), None, "Enter an HTTP or HTTPS address.".to_owned()),
-            Err(error) => {
-                let message = format!("Could not create HTTP client: {error}");
-                (None, Some(message.clone()), message)
-            }
-        };
+        let (load_event_sender, load_event_receiver) = mpsc::channel();
 
         Self {
             address: String::new(),
-            status_message,
-            loading: false,
-            client,
-            client_error,
-            result_sender,
-            result_receiver,
+            status_message: "Enter an HTTP or HTTPS address.".to_owned(),
+            webview: None,
+            load_event_sender,
+            load_event_receiver,
         }
     }
 }
 
 impl BrowserApp {
-    fn start_navigation(&mut self, context: egui::Context) {
+    fn start_navigation(&mut self) {
         let entered_address = self.address.trim();
 
         if entered_address.is_empty() {
@@ -71,54 +51,52 @@ impl BrowserApp {
 
         self.address = address.clone();
 
-        let Some(client) = self.client.clone() else {
-            self.status_message = self
-                .client_error
-                .clone()
-                .unwrap_or_else(|| "The HTTP client is unavailable.".to_owned());
+        let Some(webview) = &self.webview else {
+            self.status_message = "The web page view is not available.".to_owned();
             return;
         };
 
-        self.loading = true;
-        self.status_message = format!("Loading {address}…");
+        match webview.load_url(&address) {
+            Ok(()) => self.status_message = format!("Loading {address}…"),
+            Err(error) => self.status_message = format!("Could not open address: {error}"),
+        }
+    }
+}
 
-        let result_sender = self.result_sender.clone();
-        std::thread::spawn(move || {
-            let result = client
-                .get(&address)
-                .send()
-                .map(|response| NavigationResult {
-                    address: response.url().to_string(),
-                    status: response.status().to_string(),
-                })
-                .map_err(|error| error.to_string());
-
-            let _ = result_sender.send(result);
-            context.request_repaint();
-        });
+fn to_webview_rect(rect: egui::Rect) -> WebViewRect {
+    WebViewRect {
+        position: LogicalPosition::new(f64::from(rect.min.x), f64::from(rect.min.y)).into(),
+        size: LogicalSize::new(f64::from(rect.width()), f64::from(rect.height())).into(),
     }
 }
 
 impl eframe::App for BrowserApp {
-    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        if let Ok(result) = self.result_receiver.try_recv() {
-            self.loading = false;
-            self.status_message = match result {
-                Ok(result) => format!("{} — HTTP {}", result.address, result.status),
-                Err(error) => format!("Request failed: {error}"),
-            };
+    fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        while let Ok((event, address)) = self.load_event_receiver.try_recv() {
+            match event {
+                PageLoadEvent::Started => {
+                    if address != "about:blank" {
+                        self.status_message = format!("Loading {address}…");
+                    }
+                }
+                PageLoadEvent::Finished => {
+                    if address.starts_with("http://") || address.starts_with("https://") {
+                        self.address = address;
+                        self.status_message = "Page loaded.".to_owned();
+                    }
+                }
+            }
         }
 
-        let context = ui.ctx().clone();
         let mut navigate_requested = false;
-        let loading = self.loading;
+        let mut page_area = None;
+        let context = ui.ctx().clone();
 
         egui::CentralPanel::default().show(ui, |ui| {
             ui.horizontal(|ui| {
                 ui.label("Address:");
 
-                let address_field = ui.add_enabled(
-                    !loading,
+                let address_field = ui.add(
                     egui::TextEdit::singleline(&mut self.address)
                         .hint_text("https://example.com")
                         .desired_width(f32::INFINITY),
@@ -127,10 +105,7 @@ impl eframe::App for BrowserApp {
                 navigate_requested = address_field.lost_focus()
                     && ui.input(|input| input.key_pressed(egui::Key::Enter));
 
-                if ui
-                    .add_enabled(!loading, egui::Button::new("Go"))
-                    .clicked()
-                {
+                if ui.button("Go").clicked() {
                     navigate_requested = true;
                 }
             });
@@ -138,11 +113,45 @@ impl eframe::App for BrowserApp {
             ui.separator();
             ui.label(&self.status_message);
             ui.separator();
-            ui.label("Web page area (HTML rendering comes in a later milestone.)");
+
+            let available = ui.available_rect_before_wrap();
+            ui.allocate_rect(available, egui::Sense::hover());
+            page_area = Some(available);
         });
 
+        if let Some(page_area) = page_area {
+            let bounds = to_webview_rect(page_area);
+
+            if self.webview.is_none() {
+                let load_event_sender = self.load_event_sender.clone();
+                let context = context.clone();
+
+                match WebViewBuilder::new()
+                    .with_url("about:blank")
+                    .with_incognito(true)
+                    .with_on_page_load_handler(move |event, address| {
+                        let _ = load_event_sender.send((event, address));
+                        context.request_repaint();
+                    })
+                    .with_bounds(bounds.clone())
+                    .build_as_child(frame)
+                {
+                    Ok(webview) => self.webview = Some(webview),
+                    Err(error) => {
+                        self.status_message = format!("Could not create web page view: {error}");
+                    }
+                }
+            }
+
+            if let Some(webview) = &self.webview {
+                if let Err(error) = webview.set_bounds(bounds) {
+                    self.status_message = format!("Could not resize web page view: {error}");
+                }
+            }
+        }
+
         if navigate_requested {
-            self.start_navigation(context);
+            self.start_navigation();
         }
     }
 }
