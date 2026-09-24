@@ -17,7 +17,7 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. B
 
 ## Current status
 
-Milestones v0.0.1 through v0.0.4 are complete on macOS. Dark Horse opens a window, accepts an address, defaults bare domains to HTTPS, and displays real pages through Wry; Google and YouTube have been tried successfully. The WebView's incognito option is enabled, but temporary-only storage behavior has not been verified. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
+Milestones v0.0.1 through v0.0.5 are complete on macOS. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, accepts an address, defaults bare domains to HTTPS, displays real pages through Wry, and provides back, forward, and reload controls. Google and YouTube have been tried successfully. The WebView's incognito option is enabled, but temporary-only storage behavior has not been verified. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
 
 ## Run
 

@@ -74,6 +74,14 @@ A WebView displays web pages using an existing web engine. Wry provides a Rust i
 
 Wry provides an incognito option that Dark Horse enables. The project still needs to verify that cookies, cache, and website storage do not remain after closing the app on each target platform. Enabling the option is not the same as verifying the privacy behavior.
 
+### WebView navigation history
+
+The WebView keeps track of pages opened through address navigation and links. Dark Horse asks the WebView whether back or forward navigation is available, then tells it to move through that history. Keeping a second, separate history list in the app can get out of sync with redirects or links clicked inside a page.
+
+### Drawing icons with egui
+
+`egui::Painter` can draw lines and shapes directly. Dark Horse draws the back and forward arrows this way so their appearance does not depend on whether the selected text font contains arrow characters. The reload symbol uses a text glyph because it rendered correctly in the current UI.
+
 ### `CentralPanel`
 
 An egui panel is a layout area for arranging widgets. `CentralPanel` fills the main content area of the app window; its closure describes the controls shown there.
