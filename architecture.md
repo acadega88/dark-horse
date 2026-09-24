@@ -10,7 +10,7 @@ Cargo.toml        Package metadata and Rust dependencies
 Cargo.lock        Exact dependency versions selected by Cargo
 ```
 
-The initial application is a normal Rust executable. The first GUI layer is `winit`, which creates the native window and delivers events such as resizing and keyboard input. It does not draw the contents of the window, so a drawing approach will be chosen when the prototype needs to display content.
+The initial application is a normal Rust executable. The first GUI layer is `winit`, which creates the native window and delivers events such as resizing and keyboard input. The v0.0.1 prototype opens and closes a basic window on macOS. This verifies only the current macOS build; Linux and Windows have not been tested yet. `winit` does not draw the contents of the window, so a drawing approach will be chosen when the prototype needs to display content.
 
 ## Platform goals
 

@@ -5,7 +5,7 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 ## Current milestone
 
 - [x] v0.0.0 — Initialize the Rust project and run the starter program.
-- [ ] v0.0.1 — Open and run a basic application window.
+- [x] v0.0.1 — Open and run a basic application window (verified on macOS).
 
 ## Browser prototype
 

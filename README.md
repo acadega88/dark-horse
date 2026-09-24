@@ -17,7 +17,7 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. T
 
 ## Current status
 
-The Rust project has been initialized, and `winit` has been added as a dependency. The starter program has run successfully and currently prints `Hello, world!`; opening a window is the next milestone.
+Milestone v0.0.1 is complete: the application opens and closes a basic window on macOS using `winit`. Linux and Windows have not been verified yet. The next milestone is an address bar.
 
 ## Run
 
