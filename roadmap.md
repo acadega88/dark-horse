@@ -6,10 +6,10 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 
 - [x] v0.0.0 — Initialize the Rust project and run the starter program.
 - [x] v0.0.1 — Open and run a basic application window (verified on macOS).
+- [x] v0.0.2 — Add an editable address bar (verified on macOS; navigation not connected yet).
 
 ## Browser prototype
 
-- [ ] v0.0.2 — Add an address bar.
 - [ ] v0.0.3 — Implement basic HTTP/HTTPS navigation.
 - [ ] v0.0.4 — Display basic HTML.
 - [ ] v0.0.5 — Add basic HTML rendering.

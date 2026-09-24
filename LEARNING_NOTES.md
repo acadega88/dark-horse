@@ -34,6 +34,22 @@ Asks Cargo to compile the application if needed and then run it. The first build
 
 A Rust library for creating windows and receiving operating-system events such as resize, keyboard, and pointer input. It handles window management, not HTML rendering or drawing the browser interface itself.
 
+### `egui` and `eframe`
+
+`egui` provides interface widgets such as labels, buttons, and editable text fields. It uses an immediate-mode approach: application code describes the interface during each UI update, and egui reports interactions such as text edits or button clicks. `eframe` is the app framework that connects egui to a native window, input events, and a renderer on desktop platforms. We use these for the browser's own controls; they are not a web page rendering engine.
+
+### `String` and `&mut`
+
+The address is stored in a `String`, which can hold text that changes while the program runs. `&mut self.address` passes the text field temporary permission to change that value. The app still owns the string and can use its updated value in later UI updates.
+
+### `TextEdit::singleline`
+
+This egui widget provides one editable line of text, including normal cursor movement, selection, and text input. In v0.0.2 it only collects an address; it does not start a network request.
+
+### `CentralPanel`
+
+An egui panel is a layout area for arranging widgets. `CentralPanel` fills the main content area of the app window; its closure describes the controls shown there.
+
 ### Event loop
 
 The application waits for events from the operating system and responds to them. For example, it may redraw after a resize or close the window after a close request. This is the basic pattern used by many graphical applications.
@@ -55,3 +71,25 @@ The operating system sends `WindowEvent::CloseRequested` when the user asks to c
 ### `target/`
 
 Cargo's generated build output directory. It contains compiled files and can be recreated from the source and manifest, so it is normally excluded from Git.
+
+## Git workflow
+
+### Branch
+
+A branch is a named line of work. We create a branch for each milestone, such as `feature/v0.0.1-window`, so its changes can be developed and reviewed separately from `main`.
+
+### Commit
+
+A commit is a saved snapshot of the staged changes. A useful commit has a short message describing what changed.
+
+### Push and pull
+
+`git push` sends local commits to a remote repository such as GitHub. `git pull` brings commits from the remote branch into the local branch.
+
+### Pull request and merge
+
+A pull request (PR) proposes merging one branch into another on GitHub. Reviewing and merging the PR brings the milestone changes into `main`.
+
+### Milestone workflow used here
+
+Create a milestone branch, make and commit the change, push the branch, open a PR into `main`, merge it, then switch back to `main` and pull. The project owner is practicing this workflow one milestone at a time.
