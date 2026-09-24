@@ -42,6 +42,10 @@ When the address field contains a domain without a URL scheme, prepend `https://
 
 Open DuckDuckGo when Dark Horse starts. This gives the prototype a useful initial page while Google repeatedly presents a traffic-verification challenge in the current WebView setup. The start page can be revisited after broader compatibility testing.
 
+## 2026-09-24 — Split startup, browser app, and icons into modules
+
+Keep `main.rs` focused on starting the application. Put browser state, navigation, and UI in `browser_app.rs`, and put navigation icon drawing in `icons.rs`. This makes each file easier to understand while keeping the prototype small; avoid creating more modules until they have a clear responsibility.
+
 ## 2026-09-24 — Development and learning approach
 
 Keep implementation incremental. Explain important concepts and architectural choices before adding them. The project owner prefers to install and run tools through the terminal, with step-by-step instructions.

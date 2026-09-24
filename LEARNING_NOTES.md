@@ -86,6 +86,10 @@ The WebView keeps track of pages opened through address navigation and links. Da
 
 An egui panel is a layout area for arranging widgets. `CentralPanel` fills the main content area of the app window; its closure describes the controls shown there.
 
+### Rust modules
+
+Rust modules group related code and can live in separate files. `main.rs` declares the `browser_app` and `icons` modules and starts the app. The browser state and behavior live in `browser_app.rs`; reusable navigation icon drawing lives in `icons.rs`. A module can expose only the items another module needs with visibility such as `pub(crate)`.
+
 ### Event loop
 
 The application waits for events from the operating system and responds to them. For example, it may redraw after a resize or close the window after a close request. This is the basic pattern used by many graphical applications.
