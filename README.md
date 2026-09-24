@@ -17,7 +17,7 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. B
 
 ## Current status
 
-Milestones v0.0.1 through v0.0.5 are complete on macOS. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, accepts an address, defaults bare domains to HTTPS, displays real pages through Wry, and provides back, forward, and reload controls. Google and YouTube have been tried successfully. The WebView's incognito option is enabled, but temporary-only storage behavior has not been verified. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
+Milestones v0.0.1 through v0.0.6 are complete on macOS. The privacy restart check confirmed that cookies, `localStorage`, Cache API data, and the cacheable HTTP response do not persist after Dark Horse closes. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, accepts an address, defaults bare domains to HTTPS, displays real pages through Wry, and provides back, forward, and reload controls. Google and YouTube have been tried successfully. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
 
 The code is organized into `src/main.rs` for startup, `src/browser_app.rs` for browser state and UI, and `src/icons.rs` for navigation icons.
 
@@ -31,7 +31,8 @@ cargo run
 
 ## Project notes
 
-- [Architecture](architecture.md)
-- [Roadmap](roadmap.md)
-- [Decisions](decisions.md)
-- [Learning notes](LEARNING_NOTES.md)
+- [Architecture](project-notes/architecture.md)
+- [Roadmap](project-notes/roadmap.md)
+- [Decisions](project-notes/decisions.md)
+- [Learning notes](project-notes/LEARNING_NOTES.md)
+- [Privacy check instructions](project-notes/privacy-check.md)

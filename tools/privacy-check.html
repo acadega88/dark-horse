@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dark Horse privacy check</title>
+  <style>
+    body { max-width: 760px; margin: 3rem auto; padding: 0 1.25rem; font: 16px/1.5 system-ui, sans-serif; }
+    li { margin: .35rem 0; }
+    button { margin: .75rem .5rem .75rem 0; padding: .55rem .8rem; }
+    code, pre { background: #f1f1f1; padding: .15rem .35rem; }
+    #http-cache { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>Dark Horse privacy check</h1>
+  <p>This local page checks whether browser data survives after Dark Horse is fully closed.</p>
+
+  <h2>Data found when this page opened</h2>
+  <ul>
+    <li>Cookie: <strong id="cookie-state">checking…</strong></li>
+    <li>localStorage: <strong id="local-state">checking…</strong></li>
+    <li>Cache API site storage: <strong id="site-cache-state">checking…</strong></li>
+  </ul>
+
+  <button id="write-markers">Store test data</button>
+  <button id="check-http-cache">Request cacheable resource</button>
+  <p id="http-cache">The cacheable resource has not been requested yet.</p>
+  <p>To check the HTTP cache, watch the terminal running the local server. A request to <code>/cache-probe</code> should appear again after restarting Dark Horse.</p>
+
+  <script>
+    const marker = 'dark-horse-privacy-check';
+    const cacheName = 'dark-horse-privacy-check';
+    const cookiePresent = document.cookie.split('; ').some((cookie) => cookie.startsWith(`${marker}=`));
+    document.querySelector('#cookie-state').textContent = cookiePresent ? 'FOUND' : 'absent';
+    document.querySelector('#local-state').textContent = localStorage.getItem(marker) ? 'FOUND' : 'absent';
+
+    if ('caches' in window) {
+      caches.open(cacheName).then((cache) => cache.match('/site-cache-marker')).then((response) => {
+        document.querySelector('#site-cache-state').textContent = response ? 'FOUND' : 'absent';
+      }).catch((error) => {
+        document.querySelector('#site-cache-state').textContent = `could not check (${error})`;
+      });
+    } else {
+      document.querySelector('#site-cache-state').textContent = 'unsupported by this WebView';
+    }
+
+    document.querySelector('#write-markers').addEventListener('click', async () => {
+      document.cookie = `${marker}=present; Max-Age=604800; SameSite=Lax; Path=/`;
+      localStorage.setItem(marker, 'present');
+      if ('caches' in window) {
+        const cache = await caches.open(cacheName);
+        await cache.put('/site-cache-marker', new Response('present'));
+      }
+      location.reload();
+    });
+
+    document.querySelector('#check-http-cache').addEventListener('click', async () => {
+      const output = document.querySelector('#http-cache');
+      try {
+        const response = await fetch('/cache-probe');
+        output.textContent = await response.text();
+      } catch (error) {
+        output.textContent = `Request failed: ${error}`;
+      }
+    });
+  </script>
+</body>
+</html>
