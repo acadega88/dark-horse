@@ -1,44 +1,39 @@
-use winit::{
-    application::ApplicationHandler,
-    event::WindowEvent,
-    event_loop::{ActiveEventLoop, EventLoop},
-    window::{Window, WindowId},
-};
+use eframe::egui;
 
 #[derive(Default)]
-struct App {
-    window: Option<Window>,
+struct BrowserApp {
+    address: String,
 }
 
-impl ApplicationHandler for App {
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let attributes = Window::default_attributes()
-            .with_title("Dark Horse Browser");
+impl eframe::App for BrowserApp {
+    fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label("Address:");
 
-        self.window = Some(
-            event_loop
-                .create_window(attributes)
-                .expect("Could not create window"),
-        );
-    }
+                ui.add(
+                    egui::TextEdit::singleline(&mut self.address)
+                        .hint_text("https://example.com")
+                        .desired_width(f32::INFINITY),
+                );
+            });
 
-    fn window_event(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        _window_id: WindowId,
-        event: WindowEvent,
-    ) {
-        if let WindowEvent::CloseRequested = event {
-            event_loop.exit();
-        }
+            ui.separator();
+            ui.label("Web page area");
+        });
     }
 }
 
-fn main() {
-    let event_loop = EventLoop::new().expect("Could not create event loop");
-    let mut app = App::default();
+fn main() -> eframe::Result {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_inner_size([800.0, 600.0]),
+        ..Default::default()
+    };
 
-    event_loop
-        .run_app(&mut app)
-        .expect("The event loop failed");
+    eframe::run_native(
+        "Dark Horse Browser",
+        options,
+        Box::new(|_creation_context| Ok(Box::<BrowserApp>::default())),
+    )
 }

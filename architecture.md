@@ -10,7 +10,9 @@ Cargo.toml        Package metadata and Rust dependencies
 Cargo.lock        Exact dependency versions selected by Cargo
 ```
 
-The initial application is a normal Rust executable. The first GUI layer is `winit`, which creates the native window and delivers events such as resizing and keyboard input. The v0.0.1 prototype opens and closes a basic window on macOS. This verifies only the current macOS build; Linux and Windows have not been tested yet. `winit` does not draw the contents of the window, so a drawing approach will be chosen when the prototype needs to display content.
+The initial application is a normal Rust executable. The v0.0.1 prototype uses `winit` directly to create a native window and handle events; it opens and closes on macOS. Linux and Windows have not been verified yet. `winit` does not provide widgets or draw window contents.
+
+For v0.0.2, the app has migrated to `eframe`/`egui` for browser UI controls. `eframe` supplies the app framework and renderer; `egui` supplies widgets. The prototype now shows an editable address field on macOS. The field is not connected to navigation yet, and the web page rendering engine remains undecided and separate from the browser's own controls.
 
 ## Platform goals
 

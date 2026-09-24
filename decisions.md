@@ -18,6 +18,14 @@ Target macOS, Linux, and Windows from the start. Check platform support when sel
 
 Use `winit` for the first window prototype. It provides cross-platform window creation and event handling while keeping the prototype small. It does not draw window contents; choose a rendering approach later when needed.
 
+## 2026-09-24 — UI prototype: eframe and egui
+
+Use `eframe` with `egui` for the v0.0.2 browser UI prototype, beginning with an editable address field. It provides cross-platform widgets and handles the app window, input, and rendering, avoiding a custom text-input and drawing system at this stage. This changes the prototype's UI framework; it does not select the web page rendering engine. The existing direct `winit` window code still needs to be migrated.
+
 ## 2026-09-24 — Development and learning approach
 
 Keep implementation incremental. Explain important concepts and architectural choices before adding them. The project owner prefers to install and run tools through the terminal, with step-by-step instructions.
+
+## 2026-09-24 — Git practice by milestone
+
+Use a separate branch for each milestone (for example, `feature/v0.0.1-window`), then push it, open a pull request into `main`, merge it, and pull the updated `main` branch locally. This gives the project owner regular practice with Git while keeping milestone work reviewable.
