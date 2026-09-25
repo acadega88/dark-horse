@@ -17,7 +17,9 @@ The target platforms are macOS, Linux, and Windows. The main language is Rust. B
 
 ## Current status
 
-Milestones v0.0.1 through v0.0.7 are complete on macOS. The privacy restart check confirmed that cookies, `localStorage`, Cache API data, and the cacheable HTTP response do not persist after Dark Horse closes. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, sends non-URL address-bar text to DuckDuckGo, opens domains directly, and provides back, forward, and reload controls. Bare public domains default to HTTPS; `localhost` and loopback IP addresses default to HTTP. Google and YouTube have been tried successfully. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
+Milestones v0.0.1 through v0.0.8 are implemented and manually verified on macOS. The privacy restart check confirmed that cookies, `localStorage`, Cache API data, and the cacheable HTTP response do not persist after Dark Horse closes. Dark Horse opens a larger, resizable window with DuckDuckGo as its start page, sends non-URL address-bar text to DuckDuckGo, opens domains directly, and provides back, forward, reload, tabs, and local bookmarks. Bare public domains default to HTTPS; `localhost` and loopback IP addresses default to HTTP. Google and YouTube have been tried successfully. Linux and Windows have not been verified, and Linux/Wayland needs a different Wry integration.
+
+The v0.0.8 work adds selectable and closable tabs, locally saved bookmarks with add, edit, and delete actions, editable bookmark names and URLs, and a bookmark toolbar beneath the address bar on every tab. Opening a new tab offers DuckDuckGo and saved bookmarks. This work has been manually verified on macOS.
 
 The code is organized into `src/main.rs` for startup, `src/browser_app.rs` for browser state and UI, and `src/icons.rs` for navigation icons.
 
@@ -36,3 +38,4 @@ cargo run
 - [Decisions](project-notes/decisions.md)
 - [Learning notes](project-notes/LEARNING_NOTES.md)
 - [Privacy check instructions](project-notes/privacy-check.md)
+- [UI improvements](project-notes/ui-improvements.md)

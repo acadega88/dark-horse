@@ -58,9 +58,17 @@ Use a separate branch for each milestone (for example, `feature/v0.0.1-window`),
 
 If address-bar input is not recognized as a URL or domain, search for it with DuckDuckGo. Keep direct navigation for explicit HTTP/HTTPS URLs and recognizable bare domains. This makes the address bar useful for both navigation and search while keeping DuckDuckGo as the chosen search provider.
 
-## 2026-09-25 — Local bookmarks and new-tab page
+## 2026-09-25 — Local bookmarks and new-tab choices
 
-Add local bookmarks as a deliberate persistence exception to the temporary browsing-data policy. Let the user choose whether a new tab shows saved bookmarks or opens DuckDuckGo. Keep this choice about new tabs; the current browser startup page remains DuckDuckGo unless changed separately later.
+Add local bookmarks as a deliberate persistence exception to the temporary browsing-data policy. When opening a new tab, offer a blank page, DuckDuckGo, or the bookmarks dashboard. Keep the initial browser startup page on DuckDuckGo.
+
+## 2026-09-25 — Remove blank page from the new-tab chooser
+
+Update the new-tab choices to DuckDuckGo and saved bookmarks only. A blank page is not useful as a choice for this browser. This supersedes the earlier new-tab choice decision; keep the initial browser startup page on DuckDuckGo.
+
+## 2026-09-25 — Bookmark names and right-click actions
+
+Store a display name and URL for each local bookmark, and let the user edit or delete bookmarks from a right-click menu. Do not put a delete `×` on every bookmark. The current native-menu/editor arrangement works around WebView layering and is temporary; the preferred UI is listed in [UI improvements](ui-improvements.md).
 
 ## 2026-09-25 — Platform testing order
 
