@@ -17,6 +17,7 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 - [x] v0.0.7 — Treat non-URL address-bar input as a DuckDuckGo search; continue opening recognized URLs and domains directly (verified on macOS, including search text, public domains, and `localhost:8765`). Public domains default to HTTPS; loopback addresses default to HTTP.
 - [x] v0.0.8 — Add selectable/closable tabs, locally saved bookmarks with editable names and URLs, bookmark add/edit/delete actions, a toolbar on every tab, and a new-tab chooser for DuckDuckGo or saved bookmarks (manually verified on macOS).
 - [ ] v0.0.9 — Add request filtering and basic ad/tracker blocking; this is a core project feature (macOS).
+  - Research findings: [request-filtering-research.md](request-filtering-research.md)
 - [ ] v0.1.0 — Add basic permission handling and safe downloads, then review the macOS prototype for everyday personal use.
 
 ## Platform support
