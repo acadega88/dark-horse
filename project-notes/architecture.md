@@ -6,7 +6,8 @@ This document records the architecture as it is understood today. It is intentio
 
 ```text
 src/main.rs        Application entry point and startup window options
-src/browser_app.rs BrowserApp state, address handling, navigation, and UI
+src/browser_app.rs BrowserApp state and action routing
+src/browser_app/   Browser UI, navigation, tabs, and bookmark modules
 src/icons.rs       Drawing for the back, forward, and reload controls
 src/user_data.rs   Local bookmark storage
 Cargo.toml         Package metadata and Rust dependencies
@@ -28,6 +29,8 @@ For v0.0.7, the address bar keeps explicit HTTP/HTTPS URLs and recognized domain
 For v0.0.8, each tab owns a separate incognito Wry WebView. Inactive WebViews are hidden and the active one is sized to the page area. Opening a new tab presents DuckDuckGo and the saved bookmarks as choices; there is no blank-page choice. Saved bookmarks are also shown in a horizontally scrolling toolbar below the address bar on every tab; selecting one navigates the active tab. Each bookmark has a name and URL and can be edited or deleted from its right-click menu. Bookmarks are written to a small JSON file in the operating system's application-data directory as an intentional persistence exception; website cookies, history, and site data are not stored there. Closing the app does not restore tabs. This implementation has been manually verified on macOS.
 
 The WebView is a native child view layered above the main egui canvas. To keep bookmark context actions visible on macOS and Windows, the current implementation uses Muda's native context menu there; Linux uses egui's context menu. The bookmark editor currently uses a borderless, always-on-top egui viewport so the page remains visible. These are implementation workarounds; the final bookmark menu/editor design is recorded in [UI improvements](ui-improvements.md).
+
+Browser application code is split by responsibility: `browser_app/ui.rs` owns the egui and WebView presentation lifecycle, `navigation.rs` handles address recognition and WebView navigation, `tabs.rs` owns tab state and tab operations, and `bookmarks.rs` owns bookmark controls and persistence actions. `browser_app.rs` holds shared application state and routes UI actions to those modules.
 
 ## Platform goals
 
