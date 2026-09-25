@@ -15,7 +15,7 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 - [x] v0.0.5 — Add back, forward, and reload controls; keep the address field in sync with page navigation (verified on macOS).
 - [x] v0.0.6 — Verify temporary-only cookies, cache, and site storage after the app closes (verified on macOS). The restart check found cookies, `localStorage`, and Cache API data absent; the cacheable HTTP resource was requested from the server again. Windows requires WebView2 Runtime 101.0.1210.39 or newer for Wry incognito mode and remains unverified; Linux remains unverified too.
 - [x] v0.0.7 — Treat non-URL address-bar input as a DuckDuckGo search; continue opening recognized URLs and domains directly (verified on macOS, including search text, public domains, and `localhost:8765`). Public domains default to HTTPS; loopback addresses default to HTTP.
-- [ ] v0.0.8 — Add local bookmarks and a new-tab preference: show bookmarks or open DuckDuckGo (macOS).
+- [x] v0.0.8 — Add selectable/closable tabs, locally saved bookmarks with editable names and URLs, bookmark add/edit/delete actions, a toolbar on every tab, and a new-tab chooser for DuckDuckGo or saved bookmarks (manually verified on macOS).
 - [ ] v0.0.9 — Add request filtering and basic ad/tracker blocking; this is a core project feature (macOS).
 - [ ] v0.1.0 — Add basic permission handling and safe downloads, then review the macOS prototype for everyday personal use.
 

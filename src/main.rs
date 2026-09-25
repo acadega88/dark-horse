@@ -1,5 +1,6 @@
 mod browser_app;
 mod icons;
+mod user_data;
 
 use eframe::egui;
 

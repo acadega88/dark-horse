@@ -80,7 +80,23 @@ Wry provides an incognito option that Dark Horse enables. On macOS, a restart ch
 
 ### Bookmarks
 
-Bookmarks are saved references to pages that the user chooses to keep. Dark Horse intends to store bookmarks locally, even though temporary browsing data such as cookies and site storage is cleared on exit. A new tab will be configurable to show bookmarks or DuckDuckGo.
+Bookmarks are saved references to pages that the user chooses to keep. Dark Horse stores these locally as an intentional exception, even though temporary browsing data such as cookies and site storage is cleared on exit. Bookmarks are saved as JSON in the operating system's application-data directory. Each new tab offers DuckDuckGo and the saved bookmarks; a bookmark toolbar also stays available below the address bar.
+
+### Browser tabs and WebViews
+
+Each Dark Horse tab owns a separate Wry WebView, which keeps that tab's page and navigation history separate from other tabs. Inactive WebViews are hidden, and the selected WebView is shown in the page area. Tabs are only held in memory for the current app run; they are not restored after closing Dark Horse.
+
+### Native child views and UI layering
+
+The Wry page is a native child view. It can be drawn above the main egui canvas, so an egui popup in the main window may be hidden behind the page. A separate always-on-top viewport can appear above it, but that viewport is a separate native surface. This is why the bookmark menu/editor still needs UI work; see [UI improvements](ui-improvements.md).
+
+### Muda and raw window handles
+
+Muda creates operating-system menus. On macOS and Windows, Dark Horse uses it to show the bookmark right-click menu above the Wry page. `raw-window-handle` provides access to the platform window handle needed to attach that menu. Linux currently uses egui's context menu instead.
+
+### JSON and Serde
+
+Serde derives code to convert Rust data types to and from formats such as JSON. Dark Horse uses it with `serde_json` to save the small local data file containing user-selected bookmarks. This file is separate from the WebView's temporary browsing data.
 
 ### Cookies, site storage, and HTTP cache
 
