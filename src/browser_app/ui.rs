@@ -1,10 +1,14 @@
 use eframe::egui;
+#[cfg(target_os = "macos")]
+use wry::WebViewExtMacOS;
 use wry::dpi::{LogicalPosition, LogicalSize};
 use wry::{PageLoadEvent, Rect as WebViewRect, WebViewBuilder};
 
 use super::bookmarks::bookmark_button;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
 use super::bookmarks::show_bookmark_context_menu;
+#[cfg(target_os = "macos")]
+use super::request_filter;
 use super::tabs::BrowserTab;
 use super::{BrowserApp, NewTabChoice, UiAction};
 use crate::icons::{NavigationIcon, navigation_button};
@@ -18,6 +22,49 @@ fn to_webview_rect(rect: egui::Rect) -> WebViewRect {
 
 impl eframe::App for BrowserApp {
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        #[cfg(target_os = "macos")]
+        {
+            while let Ok(result) = self.request_filter_compile_receiver.try_recv() {
+                match result {
+                    Ok(()) => self.request_filter_compiled = true,
+                    Err(error) => {
+                        self.request_filter_failed = true;
+                        for tab in &mut self.tabs {
+                            tab.status_message = format!("Request filtering unavailable: {error}");
+                        }
+                    }
+                }
+            }
+
+            while let Ok((tab_id, result)) = self.request_filter_attach_receiver.try_recv() {
+                if let Some(tab) = self.tabs.iter_mut().find(|tab| tab.id == tab_id) {
+                    match result {
+                        Ok(()) => {
+                            tab.request_filter_attached = true;
+                            if let Some(address) = tab.pending_url.take() {
+                                match tab
+                                    .webview
+                                    .as_ref()
+                                    .expect("filter belongs to a webview")
+                                    .load_url(&address)
+                                {
+                                    Ok(()) => tab.status_message = format!("Loading {address}…"),
+                                    Err(error) => {
+                                        tab.status_message =
+                                            format!("Could not open address: {error}");
+                                    }
+                                }
+                            }
+                        }
+                        Err(error) => {
+                            tab.request_filter_failed = true;
+                            tab.status_message = format!("Request filtering unavailable: {error}");
+                        }
+                    }
+                }
+            }
+        }
+
         while let Ok((tab_id, event, address)) = self.load_event_receiver.try_recv() {
             if let Some(tab) = self.tabs.iter_mut().find(|tab| tab.id == tab_id) {
                 match event {
@@ -320,32 +367,69 @@ impl eframe::App for BrowserApp {
         if let Some(page_area) = page_area {
             let bounds = to_webview_rect(page_area);
             let active_tab = self.active_tab;
+            #[cfg(target_os = "macos")]
+            let request_filter_compiled = self.request_filter_compiled;
+            #[cfg(target_os = "macos")]
+            let request_filter_failed = self.request_filter_failed;
+            #[cfg(target_os = "macos")]
+            let request_filter_attach_sender = self.request_filter_attach_sender.clone();
             let tab = &mut self.tabs[active_tab];
 
             if tab.webview.is_none() {
-                if let Some(address) = tab.pending_url.take() {
-                    let tab_id = tab.id;
-                    let load_event_sender = self.load_event_sender.clone();
-                    let context = context.clone();
+                #[cfg(target_os = "macos")]
+                let filter_ready = request_filter_compiled;
+                #[cfg(not(target_os = "macos"))]
+                let filter_ready = true;
+                #[cfg(target_os = "macos")]
+                let filter_failed = tab.request_filter_failed;
+                #[cfg(not(target_os = "macos"))]
+                let filter_failed = false;
 
-                    match WebViewBuilder::new()
-                        .with_url(&address)
-                        .with_incognito(true)
-                        .with_visible(true)
-                        .with_on_page_load_handler(move |event, address| {
-                            let _ = load_event_sender.send((tab_id, event, address));
-                            context.request_repaint();
-                        })
-                        .with_bounds(bounds.clone())
-                        .build_as_child(frame)
-                    {
-                        Ok(webview) => {
-                            tab.webview = Some(webview);
-                            tab.webview_visible = true;
+                if filter_ready && !filter_failed {
+                    if let Some(address) = tab.pending_url.take() {
+                        let tab_id = tab.id;
+                        let load_event_sender = self.load_event_sender.clone();
+                        let context = context.clone();
+                        #[cfg(target_os = "macos")]
+                        let initial_url = "about:blank";
+                        #[cfg(not(target_os = "macos"))]
+                        let initial_url = address.as_str();
+
+                        match WebViewBuilder::new()
+                            .with_url(initial_url)
+                            .with_incognito(true)
+                            .with_visible(true)
+                            .with_on_page_load_handler(move |event, address| {
+                                let _ = load_event_sender.send((tab_id, event, address));
+                                context.request_repaint();
+                            })
+                            .with_bounds(bounds.clone())
+                            .build_as_child(frame)
+                        {
+                            Ok(webview) => {
+                                #[cfg(target_os = "macos")]
+                                {
+                                    tab.pending_url = Some(address);
+                                    tab.status_message = "Installing request filter…".to_owned();
+                                    request_filter::attach_test_rule(
+                                        webview.manager(),
+                                        tab_id,
+                                        request_filter_attach_sender,
+                                    );
+                                }
+                                tab.webview = Some(webview);
+                                tab.webview_visible = true;
+                            }
+                            Err(error) => {
+                                tab.status_message =
+                                    format!("Could not create web page view: {error}");
+                            }
                         }
-                        Err(error) => {
-                            tab.status_message = format!("Could not create web page view: {error}");
-                        }
+                    }
+                } else {
+                    #[cfg(target_os = "macos")]
+                    if !request_filter_failed {
+                        tab.status_message = "Preparing request filter…".to_owned();
                     }
                 }
             }
@@ -377,6 +461,15 @@ impl eframe::App for BrowserApp {
 
         if needs_repaint {
             context.request_repaint();
+        }
+
+        #[cfg(target_os = "macos")]
+        if (!self.request_filter_compiled && !self.request_filter_failed)
+            || self.tabs.iter().any(|tab| {
+                tab.webview.is_some() && !tab.request_filter_attached && !tab.request_filter_failed
+            })
+        {
+            context.request_repaint_after(std::time::Duration::from_millis(100));
         }
     }
 }

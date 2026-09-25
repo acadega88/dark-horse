@@ -21,12 +21,16 @@
     <li>Cookie: <strong id="cookie-state">checking…</strong></li>
     <li>localStorage: <strong id="local-state">checking…</strong></li>
     <li>Cache API site storage: <strong id="site-cache-state">checking…</strong></li>
+    <li>Request filter: <strong id="request-filter-state">not checked</strong></li>
   </ul>
 
   <button id="write-markers">Store test data</button>
   <button id="check-http-cache">Request cacheable resource</button>
+  <button id="check-request-filter">Test request filter</button>
   <p id="http-cache">The cacheable resource has not been requested yet.</p>
+  <p id="request-filter">The blocked-resource endpoint has not been requested yet.</p>
   <p>To check the HTTP cache, watch the terminal running the local server. A request to <code>/cache-probe</code> should appear again after restarting Dark Horse.</p>
+  <p>For request filtering, click the test button and confirm the server terminal does not show a <code>GET /blocked-resource</code> request.</p>
 
   <script>
     const marker = 'dark-horse-privacy-check';
@@ -62,6 +66,19 @@
         output.textContent = await response.text();
       } catch (error) {
         output.textContent = `Request failed: ${error}`;
+      }
+    });
+
+    document.querySelector('#check-request-filter').addEventListener('click', async () => {
+      const output = document.querySelector('#request-filter');
+      const state = document.querySelector('#request-filter-state');
+      try {
+        const response = await fetch('/blocked-resource', { cache: 'no-store' });
+        output.textContent = await response.text();
+        state.textContent = 'NOT BLOCKED';
+      } catch (error) {
+        output.textContent = `Request was blocked or failed: ${error}`;
+        state.textContent = 'blocked or failed';
       }
     });
   </script>

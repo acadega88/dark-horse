@@ -1,6 +1,6 @@
 # Request filtering research
 
-This note records the initial investigation for v0.0.9. No code or dependencies have been added yet.
+This note records the initial investigation and implementation status for v0.0.9. The macOS prototype compiles and attaches local test rules; the manual endpoint check passed on macOS.
 
 ## Project context
 
@@ -31,16 +31,24 @@ This note records the initial investigation for v0.0.9. No code or dependencies 
 
 Investigate `adblock` (Brave's `adblock-rust`) as the rule parser/converter, then apply its Apple-format output through WKWebView's native content-rule API. This could let the project use established ABP-style lists without writing a filter parser or hooking every request itself.
 
+The current code is only a plumbing prototype: it blocks the local `/blocked-resource` endpoint on the privacy-check server. It does not yet block general ads or trackers. The prototype keeps Wry's existing incognito webview setup and adds the compiled rule to each webview's content controller before opening its requested page.
+
+### Prototype check
+
+- The privacy-check page's request test reported `Load failed`, and the server log showed no `GET /blocked-resource`, confirming that the test request was blocked on macOS.
+- This verifies the local test rule only; it does not yet measure ad/tracker list coverage.
+- After writing the privacy markers and restarting Dark Horse, cookie, `localStorage`, and Cache API storage were all `absent`; `/cache-probe` was requested again from the server. This confirms the v0.0.6 private-browsing behavior still passes after the request-filter changes.
+
 The converter only reports rules it can represent in Apple's format, so measure supported-rule coverage before selecting a list. Start with network request blocking; leave cosmetic hiding and scriptlet injection outside v0.0.9 unless a tested need changes the scope.
 
 Before bundling a list or publishing it with Dark Horse, review its current redistribution terms and attribution requirements. EasyList's official licensing page says its repository contents are generally dual-licensed under GPL-3.0-or-later or CC BY-SA 3.0-or-later, with possible exceptions for externally hosted lists. This repository currently has no `LICENSE` file, so the project's own license should also be decided before distributing bundled filter data.
 
 ## Next validation steps
 
-1. Confirm the WKWebView configuration path can keep the incognito data store non-persistent.
+1. [x] Rerun the v0.0.6 privacy restart check after writing markers, closing Dark Horse, and opening it again.
 2. Check how many lines from a pinned EasyList/EasyPrivacy snapshot convert to Apple's format, and identify discarded rule types.
 3. Build a local test page that requests first-party and third-party scripts, images, and tracking endpoints; verify blocked requests never reach the local server and allowed requests still load.
-4. Record the selected list source, version/update policy, attribution, and filter behavior before starting implementation.
+4. Record the selected list source, version/update policy, attribution, and filter behavior before distributing bundled filter data.
 
 ## Primary references
 

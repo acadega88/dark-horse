@@ -21,6 +21,10 @@ class PrivacyCheckHandler(BaseHTTPRequestHandler):
             body = b"Cache probe response: if you can read this, the local server is reachable."
             content_type = "text/plain; charset=utf-8"
             cache_control = "public, max-age=86400"
+        elif self.path == "/blocked-resource":
+            body = b"Request filtering did not block this test resource."
+            content_type = "text/plain; charset=utf-8"
+            cache_control = "no-store"
         else:
             self.send_error(404)
             return

@@ -7,6 +7,8 @@ use crate::user_data::UserData;
 
 mod bookmarks;
 mod navigation;
+#[cfg(target_os = "macos")]
+mod request_filter;
 mod tabs;
 mod ui;
 
@@ -42,11 +44,27 @@ pub struct BrowserApp {
     editing_bookmark_position: Option<egui::Pos2>,
     load_event_sender: Sender<(u64, PageLoadEvent, String)>,
     load_event_receiver: Receiver<(u64, PageLoadEvent, String)>,
+    #[cfg(target_os = "macos")]
+    request_filter_compile_receiver: Receiver<Result<(), String>>,
+    #[cfg(target_os = "macos")]
+    request_filter_attach_sender: Sender<(u64, Result<(), String>)>,
+    #[cfg(target_os = "macos")]
+    request_filter_attach_receiver: Receiver<(u64, Result<(), String>)>,
+    #[cfg(target_os = "macos")]
+    request_filter_compiled: bool,
+    #[cfg(target_os = "macos")]
+    request_filter_failed: bool,
 }
 
 impl Default for BrowserApp {
     fn default() -> Self {
         let (load_event_sender, load_event_receiver) = mpsc::channel();
+        #[cfg(target_os = "macos")]
+        let (request_filter_compile_sender, request_filter_compile_receiver) = mpsc::channel();
+        #[cfg(target_os = "macos")]
+        let (request_filter_attach_sender, request_filter_attach_receiver) = mpsc::channel();
+        #[cfg(target_os = "macos")]
+        request_filter::compile_test_rule(request_filter_compile_sender);
         let (user_data, load_error) = UserData::load();
 
         let mut first_tab =
@@ -64,6 +82,16 @@ impl Default for BrowserApp {
             editing_bookmark_position: None,
             load_event_sender,
             load_event_receiver,
+            #[cfg(target_os = "macos")]
+            request_filter_compile_receiver,
+            #[cfg(target_os = "macos")]
+            request_filter_attach_sender,
+            #[cfg(target_os = "macos")]
+            request_filter_attach_receiver,
+            #[cfg(target_os = "macos")]
+            request_filter_compiled: false,
+            #[cfg(target_os = "macos")]
+            request_filter_failed: false,
         }
     }
 }
