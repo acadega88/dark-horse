@@ -120,7 +120,7 @@ Rust modules group related code and can live in separate files. `main.rs` declar
 
 ### Content rule lists (WebKit)
 
-A `WKContentRuleList` is a set of declarative JSON rules compiled by WebKit that can block requests before they leave the WebView. Dark Horse compiles one on macOS and attaches it to each tab's content controller; at the moment it blocks only a local test URL. Compilation and lookup are asynchronous, which is why new macOS tabs start on `about:blank` and load the real page once the rules are attached.
+A `WKContentRuleList` is a set of declarative JSON rules compiled by WebKit that can block requests before they leave the WebView. Dark Horse compiles one on macOS and attaches it to each tab's content controller; the current rules block local first- and third-party test URLs only. Compilation and lookup are asynchronous, which is why new macOS tabs start on `about:blank` and load the real page once the rules are attached.
 
 ### Conditional compilation (`#[cfg]`)
 

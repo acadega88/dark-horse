@@ -21,7 +21,7 @@ Milestones v0.0.1 through v0.0.8 are implemented and manually verified on macOS.
 
 The v0.0.8 work adds selectable and closable tabs, locally saved bookmarks with add, edit, and delete actions, editable bookmark names and URLs, and a bookmark toolbar beneath the address bar on every tab. Opening a new tab offers DuckDuckGo and saved bookmarks. This work has been manually verified on macOS.
 
-The v0.0.9 request-filtering work is in progress on macOS. A prototype compiles a WebKit content rule list and attaches it to every tab; it currently blocks only a local test endpoint, not real ads or trackers, and the local check passed. Linux and Windows have no request filtering yet.
+The v0.0.9 request-filtering work is in progress on macOS. A prototype compiles a WebKit content rule list and attaches it to every tab; it currently blocks two local test endpoints, not real ads or trackers. A local WebKit check confirms first- and third-party requests are handled as expected. Linux and Windows have no request filtering yet.
 
 The code is organized into `src/main.rs` for startup, `src/browser_app.rs` for shared browser state and action routing, `src/browser_app/` for the UI, navigation, tabs, bookmarks, and request-filter modules, `src/user_data.rs` for bookmark storage, and `src/icons.rs` for navigation icons.
 

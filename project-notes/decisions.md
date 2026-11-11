@@ -82,7 +82,7 @@ Continue development and verification on macOS for now. Windows and Linux remain
 
 ## 2026-09-25 — macOS request filtering through WebKit content rule lists
 
-For v0.0.9, block requests on macOS with WebKit's native `WKContentRuleList`, attached to each tab's `WKUserContentController` before its first real page loads (WebViews start on `about:blank`). Wry has no shared per-request callback, so this is platform-specific. The current rules are only a local test; list source, converter (Brave's `adblock` crate is the candidate), and licensing are still undecided. See [request filtering research](request-filtering-research.md).
+For v0.0.9, block requests on macOS with WebKit's native `WKContentRuleList`, attached to each tab's `WKUserContentController` before its first real page loads (WebViews start on `about:blank`). Wry has no shared per-request callback, so this is platform-specific. The current rules only block local first- and third-party test requests; list source, converter (Brave's `adblock` crate is the candidate), and licensing are still undecided. See [request filtering research](request-filtering-research.md).
 
 ## 2026-09-25 — Password-manager direction
 

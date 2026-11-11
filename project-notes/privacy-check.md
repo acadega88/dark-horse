@@ -27,7 +27,15 @@ Stop the local server with **Control+C** when finished.
 
 ## Request-filter check (macOS, v0.0.9 prototype)
 
-With the server running, open the local page and click **Test request filter**. The page should report `blocked or failed`, and the server terminal should not print `GET /blocked-resource`. If it reports `NOT BLOCKED`, the content rule list was not applied to that tab. This only checks the local test rule, not real ad or tracker blocking.
+With the server running, open either local address in Dark Horse and click **Run request-filter tests**. The page should report **all tests passed**:
+
+- First-party `/allowed-resource`: allowed; server count is 1.
+- First-party `/blocked-resource`: blocked; server count is 0.
+- Third-party `/third-party-allowed-resource`: allowed; server count is 1.
+- Third-party `/third-party-blocked-resource`: blocked; server count is 0.
+- First- and third-party JavaScript and image assets: all load; each asset count is 1.
+
+The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies the local test rules and resource types, not real ad/tracker list coverage or site compatibility.
 
 ## What this does and does not verify
 

@@ -18,6 +18,20 @@ const TEST_RULES: &str = r#"[
       "url-filter": "^http://localhost:8765/blocked-resource$"
     },
     "action": { "type": "block" }
+    },
+    {
+        "trigger": {
+            "url-filter": "^http://127\\.0\\.0\\.1:8765/third-party-blocked-resource$",
+            "load-type": ["third-party"]
+        },
+        "action": { "type": "block" }
+    },
+    {
+        "trigger": {
+            "url-filter": "^http://localhost:8765/third-party-blocked-resource$",
+            "load-type": ["third-party"]
+        },
+        "action": { "type": "block" }
   }
 ]"#;
 
