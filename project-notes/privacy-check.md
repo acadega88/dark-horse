@@ -1,6 +1,6 @@
 # v0.0.6 — Verify temporary browsing data
 
-Dark Horse enables Wry's incognito mode in `src/browser_app.rs`. This check verifies that browser data does not survive a complete app restart on the platform being tested. It uses a local-only test page and does not contact an external website.
+Dark Horse enables Wry's incognito mode in `src/browser_app/ui.rs`. This check verifies that browser data does not survive a complete app restart on the platform being tested. It uses a local-only test page and does not contact an external website.
 
 ## Run the local check
 
@@ -24,6 +24,10 @@ The page reports whether it found a cookie, a `localStorage` value, and a Cache 
 Close Dark Horse completely, reopen it, and navigate to the same local address. The cookie, `localStorage`, and Cache API entry should each say **absent**. Click **Request cacheable resource** again; a new `GET /cache-probe` should appear in the still-running server terminal. If any marker says **FOUND**, or the second cache-probe request does not reach the server, the privacy check has failed for that platform.
 
 Stop the local server with **Control+C** when finished.
+
+## Request-filter check (macOS, v0.0.9 prototype)
+
+With the server running, open the local page and click **Test request filter**. The page should report `blocked or failed`, and the server terminal should not print `GET /blocked-resource`. If it reports `NOT BLOCKED`, the content rule list was not applied to that tab. This only checks the local test rule, not real ad or tracker blocking.
 
 ## What this does and does not verify
 

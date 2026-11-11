@@ -18,6 +18,10 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 - [x] v0.0.8 — Add selectable/closable tabs, locally saved bookmarks with editable names and URLs, bookmark add/edit/delete actions, a toolbar on every tab, and a new-tab chooser for DuckDuckGo or saved bookmarks (manually verified on macOS).
 - [ ] v0.0.9 — Add request filtering and basic ad/tracker blocking; this is a core project feature (macOS).
   - Research findings: [request-filtering-research.md](request-filtering-research.md)
+  - [x] Prototype: WebKit content rule list compiled and attached to every tab before its first page; a local test endpoint is blocked and the v0.0.6 privacy check still passes (macOS).
+  - [ ] Convert a pinned EasyList/EasyPrivacy snapshot and measure rule coverage.
+  - [ ] Test with a local page using first- and third-party scripts, images, and tracking endpoints.
+  - [ ] Choose list source, update policy, and licensing.
 - [ ] v0.1.0 — Add basic permission handling and safe downloads, then review the macOS prototype for everyday personal use.
 
 ## Platform support
@@ -33,3 +37,4 @@ The sequence may change as we learn what is practical. Dark Horse currently reli
 ## Maintenance completed
 
 - Split the application entry point, browser UI/state, and navigation icon drawing into separate Rust modules after v0.0.5. This is code organization work, not a new browser feature milestone.
+- Split `browser_app.rs` into `browser_app/ui.rs`, `navigation.rs`, `tabs.rs`, and `bookmarks.rs` after v0.0.8; `request_filter.rs` was added for v0.0.9.
