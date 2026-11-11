@@ -8,7 +8,7 @@ description = "A privacy-focused desktop web browser"
 [package.metadata.bundle]
 name = "Dark Horse Browser"
 identifier = "com.acadega88.darkhorse"
-icon = ["assets/dark-horse-icon.png"]
+icon = ["assets/dark-horse-icon.png", "assets/dark-horse-icon.icns"]
 resources = ["assets/dark-horse-icon.ico"]
 category = "Entertainment"
 short_description = "A privacy-focused desktop web browser"
