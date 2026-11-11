@@ -1,0 +1,46 @@
+pkgname=dark-horse-git
+pkgver=0.1.0.r0.g0000000
+pkgrel=1
+pkgdesc='A privacy-focused desktop web browser'
+arch=('x86_64')
+url='https://github.com/acadega88/dark-horse'
+license=('unknown')
+depends=('gtk3' 'webkit2gtk-4.1' 'libxdo')
+makedepends=('git' 'rust' 'pkgconf')
+provides=('dark-horse')
+conflicts=('dark-horse')
+source=(
+  "$pkgname::git+https://github.com/acadega88/dark-horse.git#branch=main"
+  'dark-horse.desktop'
+)
+sha256sums=('SKIP' 'SKIP')
+
+pkgver() {
+  cd "$srcdir/$pkgname"
+  local version commits revision
+  version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
+  commits=$(git rev-list --count HEAD)
+  revision=$(git rev-parse --short HEAD)
+  printf '%s.r%s.g%s' "$version" "$commits" "$revision"
+}
+
+prepare() {
+  cd "$srcdir/$pkgname"
+  export CARGO_HOME="$srcdir/cargo-home"
+  cargo fetch --locked
+}
+
+build() {
+  cd "$srcdir/$pkgname"
+  export CARGO_HOME="$srcdir/cargo-home"
+  cargo build --release --locked --offline
+}
+
+package() {
+  cd "$srcdir/$pkgname"
+  install -Dm755 target/release/dark-horse "$pkgdir/usr/bin/dark-horse"
+  install -Dm644 assets/dark-horse-icon.png \
+    "$pkgdir/usr/share/icons/hicolor/1024x1024/apps/com.acadega88.darkhorse.png"
+  install -Dm644 "$srcdir/dark-horse.desktop" \
+    "$pkgdir/usr/share/applications/com.acadega88.darkhorse.desktop"
+}

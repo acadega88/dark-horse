@@ -12,6 +12,7 @@ icon = ["assets/dark-horse-icon.png", "assets/dark-horse-icon.ico"]
 resources = ["assets/dark-horse-icon.ico"]
 category = "Network"
 short_description = "A privacy-focused desktop web browser"
+deb_depends = ["libgtk-3-0", "libwebkit2gtk-4.1-0", "libxdo3"]
 
 [dependencies]
 directories = "6.0"

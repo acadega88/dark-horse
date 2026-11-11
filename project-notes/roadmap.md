@@ -25,9 +25,11 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
   - [ ] Review EasyList and EasyPrivacy attribution/licensing before distributing the bundled lists or application.
 - [ ] v0.1.0 — Make Dark Horse installable and launchable from the terminal on macOS, Windows, and Linux.
   - [ ] Build platform packages on native GitHub Actions runners.
-  - [ ] macOS: package a `.app` in a `.dmg` and provide a terminal installation path into Applications.
-  - [ ] Windows: provide an `.msi`/WinGet installation path that creates a Start menu shortcut; document the WebView2 Runtime requirement.
-  - [ ] Linux: provide a Flatpak CLI installation that creates an application-menu launcher; support X11 first, with Wayland tracked separately.
+  - [ ] macOS: build a universal `.dmg` and generate a Homebrew Cask recipe; publish it through a tap.
+  - [ ] Windows: build an Inno Setup installer with Start menu/desktop shortcuts and generate WinGet manifests; submit the manifest.
+  - [ ] Ubuntu/Debian: build a `.deb` package installable with `sudo apt install ./package.deb`.
+  - [ ] Arch: prepare and publish the AUR recipe for `yay -S dark-horse-git`.
+  - [ ] Publish version-tagged package artifacts to GitHub Releases and document WebView2 Runtime requirements.
   - [ ] Manually test installation, launching, and removal on each target OS before claiming support.
 - [ ] v0.1.1 — Add basic permission handling and safe downloads, then review the browser for everyday personal use.
 

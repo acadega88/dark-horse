@@ -2,6 +2,9 @@ name: Build desktop packages
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
   pull_request:
     paths:
       - Cargo.toml
@@ -31,11 +34,26 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
+          version=$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then version="${GITHUB_REF_NAME#v}"; fi
           dmg_path=$(find target/universal/release/bundle/dmg -maxdepth 1 -type f -name '*.dmg' -print -quit)
           test -n "$dmg_path"
           cp "$dmg_path" dist/dark-horse-macos-universal.dmg
-          cp packaging/install-macos.sh dist/
-          chmod +x dist/install-macos.sh
+          dmg_sha=$(shasum -a 256 dist/dark-horse-macos-universal.dmg | awk '{print $1}')
+          printf '%s  %s\n' "$dmg_sha" dark-horse-macos-universal.dmg > dist/SHA256SUMS
+          cat > dist/dark-horse.rb <<EOF
+          cask "dark-horse" do
+            version "$version"
+            sha256 "$dmg_sha"
+
+            url "https://github.com/acadega88/dark-horse/releases/download/v#{version}/dark-horse-macos-universal.dmg"
+            name "Dark Horse Browser"
+            desc "A privacy-focused desktop web browser"
+            homepage "https://github.com/acadega88/dark-horse"
+
+            app "Dark Horse Browser.app"
+          end
+          EOF
       - uses: actions/upload-artifact@v4
         with:
           name: dark-horse-macos-universal
@@ -44,24 +62,70 @@ jobs:
           retention-days: 14
 
   windows:
-    name: Windows MSI
+    name: Windows WinGet installer
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Install cargo-bundle on the runner
-        run: cargo install cargo-bundle --version 0.12.0 --locked
-      - name: Build MSI
-        run: cargo bundle --release --format msi
-      - name: Stage package and installer
+      - name: Install Inno Setup on the runner
+        run: choco install innosetup --yes --no-progress
+      - name: Build the release executable and installer
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
+          cargo build --release
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"$').Matches.Groups[1].Value
+          if ($env:GITHUB_REF_TYPE -eq 'tag') { $version = $env:GITHUB_REF_NAME.TrimStart('v') }
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          $outputDirectory = Join-Path $PWD.Path 'target\installer'
+          New-Item -ItemType Directory -Force $outputDirectory | Out-Null
+          & $iscc "/O$outputDirectory" "/DAppVersion=$version" 'packaging\windows\dark-horse.iss'
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed with exit code $LASTEXITCODE." }
           New-Item -ItemType Directory -Force dist | Out-Null
-          $msi = Get-ChildItem target/release/bundle/msi -Filter '*.msi' -Recurse | Select-Object -First 1
-          if (-not $msi) { throw 'cargo-bundle did not produce an MSI.' }
-          Copy-Item $msi.FullName dist/dark-horse-windows-x64.msi
-          Copy-Item packaging/install-windows.ps1 dist/install-windows.ps1
+          $installer = Get-ChildItem target/installer -Filter '*.exe' | Select-Object -First 1
+          if (-not $installer) { throw 'Inno Setup did not produce an installer.' }
+          Copy-Item $installer.FullName dist/dark-horse-windows-x64-setup.exe
+          $installerHash = (Get-FileHash dist/dark-horse-windows-x64-setup.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$installerHash  dark-horse-windows-x64-setup.exe" | Set-Content dist/dark-horse-windows-x64-setup.exe.sha256
+          $manifestDirectory = "dist/winget/$version"
+          New-Item -ItemType Directory -Force $manifestDirectory | Out-Null
+          $releaseUrl = "https://github.com/acadega88/dark-horse/releases/download/v$version/dark-horse-windows-x64-setup.exe"
+          $installerManifest = @"
+          PackageIdentifier: Acadega88.DarkHorse
+          PackageVersion: $version
+          Installers:
+            - Architecture: x64
+              InstallerType: inno
+              InstallerUrl: $releaseUrl
+              InstallerSha256: $installerHash
+              Scope: user
+              InstallerSwitches:
+                Silent: /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+                SilentWithProgress: /SILENT /SUPPRESSMSGBOXES /NORESTART /SP-
+          ManifestType: installer
+          ManifestVersion: 1.6.0
+          "@
+          Set-Content "$manifestDirectory/$version.installer.yaml" $installerManifest
+          $versionManifest = @"
+          PackageIdentifier: Acadega88.DarkHorse
+          PackageVersion: $version
+          DefaultLocale: en-US
+          ManifestType: version
+          ManifestVersion: 1.6.0
+          "@
+          Set-Content "$manifestDirectory/$version.yaml" $versionManifest
+          $localeManifest = @"
+          PackageIdentifier: Acadega88.DarkHorse
+          PackageVersion: $version
+          PackageLocale: en-US
+          Publisher: Dark Horse Project
+          PackageName: Dark Horse Browser
+          License: Unknown
+          ShortDescription: A privacy-focused desktop web browser
+          ManifestType: defaultLocale
+          ManifestVersion: 1.6.0
+          "@
+          Set-Content "$manifestDirectory/$version.locale.en-US.yaml" $localeManifest
       - uses: actions/upload-artifact@v4
         with:
           name: dark-horse-windows-x64
@@ -70,35 +134,45 @@ jobs:
           retention-days: 14
 
   linux:
-    name: Linux Flatpak
+    name: Debian/Ubuntu .deb
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install Flatpak build tools
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install WebKitGTK build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder python3-venv git
-      - name: Install Flatpak runtime and SDK
+          sudo apt-get install -y build-essential pkg-config libgtk-3-dev libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+      - name: Install cargo-bundle on the runner
+        run: cargo install cargo-bundle --version 0.12.0 --locked
+      - name: Build Debian package
         run: |
-          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user --noninteractive flathub org.gnome.Platform//49 org.gnome.Sdk//49 org.freedesktop.Sdk.Extension.rust-stable//49
-      - name: Generate offline Cargo sources
-        run: |
-          python3 -m venv "$RUNNER_TEMP/flatpak-generator"
-          "$RUNNER_TEMP/flatpak-generator/bin/pip" install 'aiohttp>=3.9.5,<4' 'tomlkit>=0.13.3,<1'
-          git clone --filter=blob:none https://github.com/flatpak/flatpak-builder-tools.git "$RUNNER_TEMP/flatpak-builder-tools"
-          git -C "$RUNNER_TEMP/flatpak-builder-tools" checkout 41c20aa10819cdb2a4f3ca171758a96d1955c018
-          "$RUNNER_TEMP/flatpak-generator/bin/python" "$RUNNER_TEMP/flatpak-builder-tools/cargo/flatpak-cargo-generator.py" Cargo.lock -o packaging/flatpak/cargo-sources.json
-      - name: Build Flatpak bundle
-        run: |
-          flatpak-builder --force-clean --user --repo="$RUNNER_TEMP/flatpak-repo" "$RUNNER_TEMP/flatpak-build" packaging/flatpak/com.acadega88.darkhorse.yml
+          cargo bundle --release --format deb
           mkdir -p dist
-          flatpak build-bundle "$RUNNER_TEMP/flatpak-repo" dist/dark-horse-linux-x86_64.flatpak com.acadega88.darkhorse stable --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
-          cp packaging/install-linux.sh dist/
-          chmod +x dist/install-linux.sh
+          deb=$(find target/release/bundle/deb -maxdepth 1 -type f -name '*.deb' -print -quit)
+          test -n "$deb"
+          cp "$deb" dist/dark-horse-linux-amd64.deb
+          sha256sum dist/dark-horse-linux-amd64.deb > dist/dark-horse-linux-amd64.deb.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: dark-horse-linux-x86_64
+          name: dark-horse-linux-deb-amd64
           path: dist/*
           if-no-files-found: error
           retention-days: 14
+
+  release:
+    name: Publish tagged package artifacts
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-assets/**/*
