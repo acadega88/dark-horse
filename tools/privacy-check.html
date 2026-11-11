@@ -9,7 +9,9 @@
     li { margin: .35rem 0; }
     button { margin: .75rem .5rem .75rem 0; padding: .55rem .8rem; }
     code, pre { background: #f1f1f1; padding: .15rem .35rem; }
-    #http-cache { white-space: pre-wrap; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ccc; padding: .4rem; text-align: left; }
+    #http-cache, #filter-summary { white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -21,11 +23,26 @@
     <li>Cookie: <strong id="cookie-state">checking…</strong></li>
     <li>localStorage: <strong id="local-state">checking…</strong></li>
     <li>Cache API site storage: <strong id="site-cache-state">checking…</strong></li>
+    <li>Request filter: <strong id="request-filter-state">not checked</strong></li>
   </ul>
 
   <button id="write-markers">Store test data</button>
   <button id="check-http-cache">Request cacheable resource</button>
+  <button id="check-request-filter">Run request-filter tests</button>
   <p id="http-cache">The cacheable resource has not been requested yet.</p>
+  <h2>Request-filter test results</h2>
+  <table>
+    <thead><tr><th>Request</th><th>Expected</th><th>Result</th><th>Server count</th></tr></thead>
+    <tbody>
+      <tr><td>First-party fetch: <code>/allowed-resource</code></td><td>Allowed</td><td id="allowed-result">Not run</td><td id="allowed-count">Not checked</td></tr>
+      <tr><td>First-party fetch: <code>/blocked-resource</code></td><td>Blocked</td><td id="blocked-result">Not run</td><td id="blocked-count">Not checked</td></tr>
+      <tr><td>Third-party fetch: <code>/third-party-allowed-resource</code></td><td>Allowed</td><td id="third-party-allowed-result">Not run</td><td id="third-party-allowed-count">Not checked</td></tr>
+      <tr><td>Third-party fetch: <code>/third-party-blocked-resource</code></td><td>Blocked</td><td id="third-party-blocked-result">Not run</td><td id="third-party-blocked-count">Not checked</td></tr>
+      <tr><td>First-party JavaScript and image</td><td>Allowed</td><td id="first-party-assets-result">Not run</td><td id="first-party-assets-count">Not checked</td></tr>
+      <tr><td>Third-party JavaScript and image</td><td>Allowed</td><td id="third-party-assets-result">Not run</td><td id="third-party-assets-count">Not checked</td></tr>
+    </tbody>
+  </table>
+  <p id="filter-summary">Run the tests to check which requests the server received.</p>
   <p>To check the HTTP cache, watch the terminal running the local server. A request to <code>/cache-probe</code> should appear again after restarting Dark Horse.</p>
 
   <script>
@@ -63,6 +80,92 @@
       } catch (error) {
         output.textContent = `Request failed: ${error}`;
       }
+    });
+
+    document.querySelector('#check-request-filter').addEventListener('click', async () => {
+      const state = document.querySelector('#request-filter-state');
+      const summary = document.querySelector('#filter-summary');
+      const localOrigin = location.origin;
+      const otherHost = location.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+      const thirdPartyOrigin = `http://${otherHost}:8765`;
+      const results = {};
+      const setResult = (id, value) => {
+        document.querySelector(`#${id}`).textContent = value;
+      };
+
+      state.textContent = 'running…';
+      summary.textContent = 'Running requests…';
+
+      const checkFetch = async (path, origin, shouldBlock) => {
+        try {
+          const response = await fetch(`${origin}${path}`, { cache: 'no-store' });
+          await response.text();
+          return !shouldBlock;
+        } catch {
+          return shouldBlock;
+        }
+      };
+
+      const loadScript = (origin, path, key) => new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = `${origin}${path}`;
+        script.onload = () => resolve(Boolean(window.filterTestAssets[key]));
+        script.onerror = () => resolve(false);
+        document.head.append(script);
+      });
+
+      const loadImage = (origin, path) => new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve(true);
+        image.onerror = () => resolve(false);
+        image.src = `${origin}${path}`;
+      });
+
+      window.filterTestAssets = {};
+      results.allowed = await checkFetch('/allowed-resource', localOrigin, false);
+      results.blocked = await checkFetch('/blocked-resource', localOrigin, true);
+      results.thirdPartyAllowed = await checkFetch('/third-party-allowed-resource', thirdPartyOrigin, false);
+      results.thirdPartyBlocked = await checkFetch('/third-party-blocked-resource', thirdPartyOrigin, true);
+      results.firstPartyAssets = await Promise.all([
+        loadScript(localOrigin, '/assets/first-party.js', 'firstPartyScript'),
+        loadImage(localOrigin, '/assets/first-party.png'),
+      ]).then((values) => values.every(Boolean));
+      results.thirdPartyAssets = await Promise.all([
+        loadScript(thirdPartyOrigin, '/assets/third-party.js', 'thirdPartyScript'),
+        loadImage(thirdPartyOrigin, '/assets/third-party.png'),
+      ]).then((values) => values.every(Boolean));
+
+      const countsResponse = await fetch('/request-counts', { cache: 'no-store' });
+      const counts = await countsResponse.json();
+      const checks = [
+        ['allowed', 'allowed-result', 'allowed-count', '/allowed-resource', 1],
+        ['blocked', 'blocked-result', 'blocked-count', '/blocked-resource', 0],
+        ['thirdPartyAllowed', 'third-party-allowed-result', 'third-party-allowed-count', '/third-party-allowed-resource', 1],
+        ['thirdPartyBlocked', 'third-party-blocked-result', 'third-party-blocked-count', '/third-party-blocked-resource', 0],
+      ];
+      let allPassed = true;
+      for (const [key, resultId, countId, path, expectedCount] of checks) {
+        const passed = results[key] && (counts[path] || 0) === expectedCount;
+        setResult(resultId, passed ? 'PASS' : 'FAIL');
+        setResult(countId, String(counts[path] || 0));
+        allPassed &&= passed;
+      }
+
+      const firstPartyAssetCount = (counts['/assets/first-party.js'] || 0)
+        + (counts['/assets/first-party.png'] || 0);
+      const thirdPartyAssetCount = (counts['/assets/third-party.js'] || 0)
+        + (counts['/assets/third-party.png'] || 0);
+      setResult('first-party-assets-result', results.firstPartyAssets ? 'PASS' : 'FAIL');
+      setResult('first-party-assets-count', String(firstPartyAssetCount));
+      setResult('third-party-assets-result', results.thirdPartyAssets ? 'PASS' : 'FAIL');
+      setResult('third-party-assets-count', String(thirdPartyAssetCount));
+      allPassed &&= results.firstPartyAssets && firstPartyAssetCount === 2
+        && results.thirdPartyAssets && thirdPartyAssetCount === 2;
+
+      state.textContent = allPassed ? 'all tests passed' : 'one or more tests failed';
+      summary.textContent = allPassed
+        ? 'All requests behaved as expected and the server counts confirm the blocked requests never arrived.'
+        : 'A request behaved unexpectedly. Check the result and server-count columns.';
     });
   </script>
 </body>

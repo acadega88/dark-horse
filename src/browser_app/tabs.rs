@@ -10,6 +10,10 @@ pub(super) struct BrowserTab {
     pub(super) is_new_tab_chooser: bool,
     pub(super) webview: Option<WebView>,
     pub(super) webview_visible: bool,
+    #[cfg(target_os = "macos")]
+    pub(super) request_filter_attached: bool,
+    #[cfg(target_os = "macos")]
+    pub(super) request_filter_failed: bool,
 }
 
 impl BrowserTab {
@@ -22,6 +26,10 @@ impl BrowserTab {
             is_new_tab_chooser: false,
             webview: None,
             webview_visible: false,
+            #[cfg(target_os = "macos")]
+            request_filter_attached: false,
+            #[cfg(target_os = "macos")]
+            request_filter_failed: false,
         }
     }
 
@@ -34,6 +42,10 @@ impl BrowserTab {
             is_new_tab_chooser: true,
             webview: None,
             webview_visible: false,
+            #[cfg(target_os = "macos")]
+            request_filter_attached: false,
+            #[cfg(target_os = "macos")]
+            request_filter_failed: false,
         }
     }
 

@@ -198,7 +198,17 @@ impl BrowserApp {
         tab.is_new_tab_chooser = false;
         tab.status_message = format!("Loading {address}…");
 
+        #[cfg(target_os = "macos")]
+        let can_navigate = tab.request_filter_attached;
+        #[cfg(not(target_os = "macos"))]
+        let can_navigate = true;
+
         if let Some(webview) = &tab.webview {
+            if !can_navigate {
+                tab.pending_url = Some(address);
+                return;
+            }
+
             if let Err(error) = webview.load_url(&address) {
                 tab.status_message = format!("Could not open address: {error}");
             }

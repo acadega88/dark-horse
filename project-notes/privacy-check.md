@@ -1,6 +1,6 @@
 # v0.0.6 — Verify temporary browsing data
 
-Dark Horse enables Wry's incognito mode in `src/browser_app.rs`. This check verifies that browser data does not survive a complete app restart on the platform being tested. It uses a local-only test page and does not contact an external website.
+Dark Horse enables Wry's incognito mode in `src/browser_app/ui.rs`. This check verifies that browser data does not survive a complete app restart on the platform being tested. It uses a local-only test page and does not contact an external website.
 
 ## Run the local check
 
@@ -25,6 +25,18 @@ Close Dark Horse completely, reopen it, and navigate to the same local address. 
 
 Stop the local server with **Control+C** when finished.
 
+## Request-filter check (macOS, v0.0.9 prototype)
+
+With the server running, open either local address in Dark Horse and click **Run request-filter tests**. The page should report **all tests passed**:
+
+- First-party `/allowed-resource`: allowed; server count is 1.
+- First-party `/blocked-resource`: blocked; server count is 0.
+- Third-party `/third-party-allowed-resource`: allowed; server count is 1.
+- Third-party `/third-party-blocked-resource`: blocked; server count is 0.
+- First- and third-party JavaScript and image assets: all load; each asset count is 1.
+
+The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies EasyList, EasyPrivacy, and the local test rules for these requests; it does not establish compatibility with everyday websites.
+
 ## What this does and does not verify
 
 - The cookie and `localStorage` checks verify that common site data is not retained after a full app exit.
@@ -35,4 +47,6 @@ Stop the local server with **Control+C** when finished.
 
 ## Results
 
+- macOS, 2026-11-11: the user manually verified that the EasyList integration works in the full Dark Horse app.
+- macOS, 2026-11-11: the combined EasyList and EasyPrivacy rules passed the local WebKit harness; full-app verification with the combined lists is pending.
 - macOS, 2026-09-24: cookie, `localStorage`, and Cache API markers were absent after a full app restart. After reopening Dark Horse at 23:51, the cacheable resource was requested again at 23:52, as confirmed by a new `GET /cache-probe` in the server log. The check passed on this macOS setup; repeat it on Windows and Linux before claiming support there.

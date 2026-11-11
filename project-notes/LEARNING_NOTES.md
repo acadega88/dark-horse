@@ -22,7 +22,7 @@ Records the exact dependency versions Cargo selected. For an application, keep t
 
 ### Dependency (crate)
 
-A dependency is code written elsewhere that the project uses. In Rust, a published package is commonly called a crate. Adding `winit` to `Cargo.toml` tells Cargo that the project depends on that library; Cargo resolves and downloads its package sources when building.
+A dependency is code written elsewhere that the project uses. In Rust, a published package is commonly called a crate. Adding a crate such as `eframe` to `Cargo.toml` tells Cargo that the project depends on that library; Cargo resolves and downloads its package sources when building.
 
 ### `cargo run`
 
@@ -32,7 +32,7 @@ Asks Cargo to compile the application if needed and then run it. The first build
 
 ### `winit`
 
-A Rust library for creating windows and receiving operating-system events such as resize, keyboard, and pointer input. It handles window management, not HTML rendering or drawing the browser interface itself.
+A Rust library for creating windows and receiving operating-system events such as resize, keyboard, and pointer input. It handles window management, not HTML rendering or drawing the browser interface itself. Dark Horse used it directly in v0.0.1; today `eframe` uses it internally, and it is no longer a direct dependency.
 
 ### `egui` and `eframe`
 
@@ -56,19 +56,19 @@ A browser address bar can accept both destinations and search text. Dark Horse o
 
 ### HTTP status code
 
-An HTTP status is the server's response to a request, such as `200 OK` or `404 Not Found`. Receiving a status means the HTTP exchange succeeded, but the status may still indicate that the requested page was not found. A network error, such as a timeout or DNS failure, means the app did not receive an HTTP response.
+(Background concept; the app no longer shows statuses since v0.0.4.) An HTTP status is the server's response to a request, such as `200 OK` or `404 Not Found`. Receiving a status means the HTTP exchange succeeded, but the status may still indicate that the requested page was not found. A network error, such as a timeout or DNS failure, means the app did not receive an HTTP response.
 
 ### Blocking request and worker thread
 
-A blocking request waits for the server's response before that operation can continue. Running it on the UI thread could make the window stop responding while the network is slow. Dark Horse starts the blocking request on a separate standard-library thread, with a 20-second timeout.
+(Used in v0.0.3; no longer in the code.) A blocking request waits for the server's response before that operation can continue. Running it on the UI thread could make the window stop responding while the network is slow. Dark Horse started the blocking request on a separate standard-library thread, with a 20-second timeout.
 
 ### Channel (`std::sync::mpsc`)
 
-A channel lets separate threads pass a value safely. The worker thread sends the request result through a channel, and the UI checks for that result without waiting. `mpsc` means multiple producers and one consumer; this app currently uses one UI receiver for navigation results.
+A channel lets separate parts of a program pass values safely. `mpsc` means multiple producers and one consumer. Dark Horse uses channels so callbacks that run outside the egui update, such as WebView page-load events and WebKit's asynchronous content-rule completion handlers, can report back. The UI drains them with `try_recv()` on every frame without waiting.
 
 ### HTTP client and cookies
 
-In v0.0.3, `reqwest::blocking::Client` sent HTTP requests and managed connection details. The app reused a client and did not enable Reqwest's optional cookie store. Wry now performs page navigation through the platform WebView; the earlier Reqwest code is no longer used by the app.
+In v0.0.3, `reqwest::blocking::Client` sent HTTP requests and managed connection details. Wry now performs page navigation through the platform WebView, and `reqwest` has been removed from the project.
 
 ### WebView and Wry
 
@@ -116,11 +116,19 @@ An egui panel is a layout area for arranging widgets. `CentralPanel` fills the m
 
 ### Rust modules
 
-Rust modules group related code and can live in separate files. `main.rs` declares the `browser_app` and `icons` modules and starts the app. The browser state and behavior live in `browser_app.rs`; reusable navigation icon drawing lives in `icons.rs`. A module can expose only the items another module needs with visibility such as `pub(crate)`.
+Rust modules group related code and can live in separate files. `main.rs` declares the `browser_app`, `icons`, and `user_data` modules and starts the app. `browser_app.rs` holds shared state and declares its own submodules in `src/browser_app/` (`ui`, `navigation`, `tabs`, `bookmarks`, and macOS-only `request_filter`); `icons.rs` draws navigation icons and `user_data.rs` stores bookmarks. A module can expose only the items another module needs with visibility such as `pub(crate)` or `pub(super)`.
+
+### Content rule lists (WebKit)
+
+A `WKContentRuleList` is a set of declarative JSON rules compiled by WebKit that can block requests before they leave the WebView. Dark Horse converts the pinned EasyList network filters to this format with `adblock` 0.13.5, adds four local test rules, and attaches the compiled list to each macOS tab. Compilation and lookup are asynchronous, which is why new macOS tabs start on `about:blank` and load the real page once the rules are attached.
+
+### Conditional compilation (`#[cfg]`)
+
+Attributes such as `#[cfg(target_os = "macos")]` include code only on certain platforms. Dark Horse uses them for the macOS request filter and for choosing the bookmark context menu per platform.
 
 ### Event loop
 
-The application waits for events from the operating system and responds to them. For example, it may redraw after a resize or close the window after a close request. This is the basic pattern used by many graphical applications.
+(The next four notes come from the v0.0.1 `winit` prototype; `eframe` now owns this code.) The application waits for events from the operating system and responds to them. For example, it may redraw after a resize or close the window after a close request. This is the basic pattern used by many graphical applications.
 
 ### `ApplicationHandler`
 

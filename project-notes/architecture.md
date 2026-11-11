@@ -5,20 +5,26 @@ This document records the architecture as it is understood today. It is intentio
 ## Current shape
 
 ```text
-src/main.rs        Application entry point and startup window options
-src/browser_app.rs BrowserApp state and action routing
-src/browser_app/   Browser UI, navigation, tabs, and bookmark modules
-src/icons.rs       Drawing for the back, forward, and reload controls
-src/user_data.rs   Local bookmark storage
-Cargo.toml         Package metadata and Rust dependencies
-Cargo.lock         Exact dependency versions selected by Cargo
+src/main.rs                          Application entry point and startup window options
+src/browser_app.rs                   BrowserApp state and action routing
+src/browser_app/ui.rs                egui layout and WebView lifecycle
+src/browser_app/navigation.rs        Address recognition, search, and WebView navigation
+src/browser_app/tabs.rs              Tab state and operations
+src/browser_app/bookmarks.rs         Bookmark controls, context menu, and editing
+src/browser_app/request_filter.rs    macOS-only WebKit content rule list (v0.0.9 prototype)
+assets/easylist-202611110754.txt     Pinned EasyList snapshot
+src/icons.rs                         Drawing for the back, forward, and reload controls
+src/user_data.rs                     Local bookmark storage
+tools/                               Local privacy-check server and test page
+Cargo.toml                           Package metadata and Rust dependencies
+Cargo.lock                           Exact dependency versions selected by Cargo
 ```
 
-The initial application is a normal Rust executable. The v0.0.1 prototype uses `winit` directly to create a native window and handle events; it opens and closes on macOS. Linux and Windows have not been verified yet. `winit` does not provide widgets or draw window contents.
+The application is a normal Rust executable. The v0.0.1 prototype used `winit` directly to create a native window; it opened and closed on macOS. Since v0.0.2 the window is created by `eframe`, which uses `winit` internally; `winit` is no longer a direct dependency, though `bookmarks.rs` still reads the window handle through `eframe::Frame`. Linux and Windows have not been verified yet. `winit` does not provide widgets or draw window contents.
 
 For v0.0.2, the app migrated to `eframe`/`egui` for browser UI controls. `eframe` supplies the app framework and renderer; `egui` supplies widgets. The prototype shows an editable address field on macOS.
 
-For v0.0.3, the selected networking approach is `reqwest` with its blocking HTTP client running on a standard-library worker thread. This avoids adding an async runtime while keeping network waits off the UI thread. The app uses a 20-second request timeout, defaults bare domains to HTTPS, and displays the final response address and HTTP status. HTTPS uses Rustls. No cookie-store feature is enabled; website rendering is a later stage.
+For v0.0.3, the app used `reqwest`'s blocking HTTP client on a standard-library worker thread to fetch addresses. This was superseded in v0.0.4: Wry now loads pages through the platform WebView, and `reqwest` is no longer a dependency. Dark Horse itself makes no HTTP requests; the WebView does.
 
 For v0.0.4, page display uses Wry, a cross-platform wrapper around each operating system's WebView. The existing `eframe`/`egui` address controls remain in the app window, with the WebView embedded below them as a child view. Google and YouTube have been opened successfully on macOS. The WebView is configured for incognito mode, but temporary-only storage behavior has not yet been verified. Wry documents that Windows requires WebView2 Runtime 101.0.1210.39 or newer for incognito mode; older runtimes ignore the setting. Wry's child-view approach works on macOS, Windows, and Linux/X11; Linux/Wayland needs a GTK-based integration and remains to be addressed. Page rendering and engine behavior come from the OS and may differ between platforms.
 
@@ -30,7 +36,9 @@ For v0.0.8, each tab owns a separate incognito Wry WebView. Inactive WebViews ar
 
 The WebView is a native child view layered above the main egui canvas. To keep bookmark context actions visible on macOS and Windows, the current implementation uses Muda's native context menu there; Linux uses egui's context menu. The bookmark editor currently uses a borderless, always-on-top egui viewport so the page remains visible. These are implementation workarounds; the final bookmark menu/editor design is recorded in [UI improvements](ui-improvements.md).
 
-Browser application code is split by responsibility: `browser_app/ui.rs` owns the egui and WebView presentation lifecycle, `navigation.rs` handles address recognition and WebView navigation, `tabs.rs` owns tab state and tab operations, and `bookmarks.rs` owns bookmark controls and persistence actions. `browser_app.rs` holds shared application state and routes UI actions to those modules.
+For v0.0.9 (in progress, macOS only), `request_filter.rs` uses `adblock` 0.13.5 to convert the pinned EasyList and EasyPrivacy network rules into one WebKit rule list, then adds it to each tab's `WKUserContentController`. Four local test rules are appended for the privacy-check page. To make sure the filter is in place before the first page loads, each macOS WebView is created on `about:blank`; once the rule list is attached, the pending URL is loaded. Compilation and attachment complete asynchronously and report back to the UI through `mpsc` channels. Other platforms are not included yet. See [request filtering research](request-filtering-research.md).
+
+Browser application code is split by responsibility: `browser_app/ui.rs` owns the egui and WebView presentation lifecycle, `navigation.rs` handles address recognition and WebView navigation, `tabs.rs` owns tab state and tab operations, `bookmarks.rs` owns bookmark controls and persistence actions, and `request_filter.rs` owns the macOS content-filter integration. `browser_app.rs` holds shared application state and routes UI actions to those modules.
 
 ## Platform goals
 

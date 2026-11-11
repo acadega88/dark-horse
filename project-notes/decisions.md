@@ -18,6 +18,8 @@ Target macOS, Linux, and Windows from the start. Check platform support when sel
 
 Use `winit` for the first window prototype. It provides cross-platform window creation and event handling while keeping the prototype small. It does not draw window contents; choose a rendering approach later when needed.
 
+**Superseded (v0.0.2):** `eframe` now creates the window. `winit` remains only as `eframe`'s internal dependency.
+
 ## 2026-09-24 — UI prototype: eframe and egui
 
 Use `eframe` with `egui` for the v0.0.2 browser UI prototype, beginning with an editable address field. It provides cross-platform widgets and handles the app window, input, and rendering, avoiding a custom text-input and drawing system at this stage. This changes the prototype's UI framework; it does not select the web page rendering engine. The existing direct `winit` window code still needs to be migrated.
@@ -25,6 +27,8 @@ Use `eframe` with `egui` for the v0.0.2 browser UI prototype, beginning with an 
 ## 2026-09-24 — HTTP client: reqwest on a worker thread
 
 Use `reqwest`'s blocking client for the first HTTP/HTTPS requests, and run it on a standard-library worker thread so a slow response does not freeze the UI. This avoids introducing an async runtime for the first navigation step. Use Rustls for HTTPS and do not enable a cookie store. This is a prototype networking choice; it does not select the future browser engine or its full networking architecture.
+
+**Superseded (v0.0.4):** page loading moved to Wry's WebView, and `reqwest` was removed from the project.
 
 ## 2026-09-24 — Initial page display: Wry WebView
 
@@ -45,6 +49,8 @@ Open DuckDuckGo when Dark Horse starts. This gives the prototype a useful initia
 ## 2026-09-24 — Split startup, browser app, and icons into modules
 
 Keep `main.rs` focused on starting the application. Put browser state, navigation, and UI in `browser_app.rs`, and put navigation icon drawing in `icons.rs`. This makes each file easier to understand while keeping the prototype small; avoid creating more modules until they have a clear responsibility.
+
+**Update:** `browser_app.rs` was later split further into `browser_app/ui.rs`, `navigation.rs`, `tabs.rs`, `bookmarks.rs`, and `request_filter.rs`.
 
 ## 2026-09-24 — Development and learning approach
 
@@ -73,6 +79,18 @@ Store a display name and URL for each local bookmark, and let the user edit or d
 ## 2026-09-25 — Platform testing order
 
 Continue development and verification on macOS for now. Windows and Linux remain target platforms, but testing them is postponed until a suitable personal test environment is available; lack of those machines does not block macOS milestones. Do not claim support on a platform before testing it.
+
+## 2026-09-25 — macOS request filtering through WebKit content rule lists
+
+For v0.0.9, block requests on macOS with WebKit's native `WKContentRuleList`, attached to each tab's `WKUserContentController` before its first real page loads (WebViews start on `about:blank`). Wry has no shared per-request callback, so this is platform-specific. The current rules only block local first- and third-party test requests; list source, converter (Brave's `adblock` crate is the candidate), and licensing are still undecided. See [request filtering research](request-filtering-research.md).
+
+## 2026-11-11 — Start request filtering with pinned EasyList
+
+Use the pinned EasyList snapshot `202611110754` for the first macOS filtering pass. Convert network rules locally with Brave's `adblock` crate and apply them through WebKit; do not download lists while browsing. Keep EasyPrivacy deferred until EasyList compatibility has been checked manually. The source file retains its upstream header and attribution. Review EasyList's GPL-3.0-or-later / CC BY-SA 3.0-or-later terms before distributing the bundled list or application.
+
+## 2026-11-11 — Add pinned EasyPrivacy
+
+After manually verifying the EasyList integration, include pinned EasyPrivacy snapshot `202611110743` as well. Convert both lists through one `FilterSet` so exception rules retain the converter's ordering. Keep list updates manual and local; verify the combined rules in the full app before considering v0.0.9 complete.
 
 ## 2026-09-25 — Password-manager direction
 
