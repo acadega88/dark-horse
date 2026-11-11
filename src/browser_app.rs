@@ -64,7 +64,7 @@ impl Default for BrowserApp {
         #[cfg(target_os = "macos")]
         let (request_filter_attach_sender, request_filter_attach_receiver) = mpsc::channel();
         #[cfg(target_os = "macos")]
-        request_filter::compile_test_rule(request_filter_compile_sender);
+        request_filter::compile_filter_rules(request_filter_compile_sender);
         let (user_data, load_error) = UserData::load();
 
         let mut first_tab =

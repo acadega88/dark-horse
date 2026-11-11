@@ -35,7 +35,7 @@ With the server running, open either local address in Dark Horse and click **Run
 - Third-party `/third-party-blocked-resource`: blocked; server count is 0.
 - First- and third-party JavaScript and image assets: all load; each asset count is 1.
 
-The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies the local test rules and resource types, not real ad/tracker list coverage or site compatibility.
+The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies EasyList plus the local test rules for these requests; it does not establish compatibility with everyday websites.
 
 ## What this does and does not verify
 

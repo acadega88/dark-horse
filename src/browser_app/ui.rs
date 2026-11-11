@@ -411,7 +411,7 @@ impl eframe::App for BrowserApp {
                                 {
                                     tab.pending_url = Some(address);
                                     tab.status_message = "Installing request filter…".to_owned();
-                                    request_filter::attach_test_rule(
+                                    request_filter::attach_filter_rules(
                                         webview.manager(),
                                         tab_id,
                                         request_filter_attach_sender,

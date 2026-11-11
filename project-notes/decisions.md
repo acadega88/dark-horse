@@ -84,6 +84,10 @@ Continue development and verification on macOS for now. Windows and Linux remain
 
 For v0.0.9, block requests on macOS with WebKit's native `WKContentRuleList`, attached to each tab's `WKUserContentController` before its first real page loads (WebViews start on `about:blank`). Wry has no shared per-request callback, so this is platform-specific. The current rules only block local first- and third-party test requests; list source, converter (Brave's `adblock` crate is the candidate), and licensing are still undecided. See [request filtering research](request-filtering-research.md).
 
+## 2026-11-11 — Start request filtering with pinned EasyList
+
+Use the pinned EasyList snapshot `202611110754` for the first macOS filtering pass. Convert network rules locally with Brave's `adblock` crate and apply them through WebKit; do not download lists while browsing. Keep EasyPrivacy deferred until EasyList compatibility has been checked manually. The source file retains its upstream header and attribution. Review EasyList's GPL-3.0-or-later / CC BY-SA 3.0-or-later terms before distributing the bundled list or application.
+
 ## 2026-09-25 — Password-manager direction
 
 Treat password-manager support as a later feature. Evaluate established open-source password managers and their integration options before implementation. Do not create a custom password vault or cryptography as a first step; verify that any proposed browser integration works with Wry and meets the project's privacy goals.
