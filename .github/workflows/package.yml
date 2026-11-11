@@ -1,0 +1,104 @@
+name: Build desktop packages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - assets/**
+      - packaging/**
+      - .github/workflows/package.yml
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS DMG
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - name: Install cargo-bundle on the runner
+        run: cargo install cargo-bundle --version 0.12.0 --locked
+      - name: Build universal DMG
+        run: cargo bundle --release --format dmg --target aarch64-apple-darwin --target x86_64-apple-darwin
+      - name: Stage package and installer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          dmg_path=$(find target/universal/release/bundle/dmg -maxdepth 1 -type f -name '*.dmg' -print -quit)
+          test -n "$dmg_path"
+          cp "$dmg_path" dist/dark-horse-macos-universal.dmg
+          cp packaging/install-macos.sh dist/
+          chmod +x dist/install-macos.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dark-horse-macos-universal
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  windows:
+    name: Windows MSI
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-bundle on the runner
+        run: cargo install cargo-bundle --version 0.12.0 --locked
+      - name: Build MSI
+        run: cargo bundle --release --format msi
+      - name: Stage package and installer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force dist | Out-Null
+          $msi = Get-ChildItem target/release/bundle/msi -Filter '*.msi' -Recurse | Select-Object -First 1
+          if (-not $msi) { throw 'cargo-bundle did not produce an MSI.' }
+          Copy-Item $msi.FullName dist/dark-horse-windows-x64.msi
+          Copy-Item packaging/install-windows.ps1 dist/install-windows.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dark-horse-windows-x64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  linux:
+    name: Linux Flatpak
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Flatpak build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder python3-venv git
+      - name: Install Flatpak runtime and SDK
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive flathub org.gnome.Platform//49 org.gnome.Sdk//49 org.freedesktop.Sdk.Extension.rust-stable//49
+      - name: Generate offline Cargo sources
+        run: |
+          python3 -m venv "$RUNNER_TEMP/flatpak-generator"
+          "$RUNNER_TEMP/flatpak-generator/bin/pip" install 'aiohttp>=3.9.5,<4' 'tomlkit>=0.13.3,<1'
+          git clone --filter=blob:none https://github.com/flatpak/flatpak-builder-tools.git "$RUNNER_TEMP/flatpak-builder-tools"
+          git -C "$RUNNER_TEMP/flatpak-builder-tools" checkout 41c20aa10819cdb2a4f3ca171758a96d1955c018
+          "$RUNNER_TEMP/flatpak-generator/bin/python" "$RUNNER_TEMP/flatpak-builder-tools/cargo/flatpak-cargo-generator.py" Cargo.lock -o packaging/flatpak/cargo-sources.json
+      - name: Build Flatpak bundle
+        run: |
+          flatpak-builder --force-clean --user --repo="$RUNNER_TEMP/flatpak-repo" "$RUNNER_TEMP/flatpak-build" packaging/flatpak/com.acadega88.darkhorse.yml
+          mkdir -p dist
+          flatpak build-bundle "$RUNNER_TEMP/flatpak-repo" dist/dark-horse-linux-x86_64.flatpak com.acadega88.darkhorse stable --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          cp packaging/install-linux.sh dist/
+          chmod +x dist/install-linux.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dark-horse-linux-x86_64
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

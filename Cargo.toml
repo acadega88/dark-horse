@@ -2,6 +2,16 @@
 name = "dark-horse"
 version = "0.1.0"
 edition = "2024"
+authors = ["Dark Horse Project"]
+description = "A privacy-focused desktop web browser"
+
+[package.metadata.bundle]
+name = "Dark Horse Browser"
+identifier = "com.acadega88.darkhorse"
+icon = ["assets/dark-horse-icon.png", "assets/dark-horse-icon.ico"]
+resources = ["assets/dark-horse-icon.ico"]
+category = "Network"
+short_description = "A privacy-focused desktop web browser"
 
 [dependencies]
 directories = "6.0"

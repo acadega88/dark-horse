@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Dark Horse Browser
+GenericName=Web Browser
+Comment=A privacy-focused desktop web browser
+Exec=dark-horse
+Icon=com.acadega88.darkhorse
+Terminal=false
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=dark-horse

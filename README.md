@@ -33,6 +33,18 @@ From the project directory, use the terminal:
 cargo run
 ```
 
+## Installable package previews
+
+The **Build desktop packages** GitHub Actions workflow builds macOS, Windows, and Linux artifacts on their native runners. It runs manually or on pull requests that touch packaging files, uploads test artifacts for 14 days, and does not publish a release or install Dark Horse on the build machine.
+
+Download and extract the artifact for your operating system, then run its installer helper:
+
+- macOS: `./install-macos.sh` copies the app from the DMG into `~/Applications`.
+- Windows: `powershell -ExecutionPolicy Bypass -File .\install-windows.ps1` installs the MSI and creates Start menu and desktop shortcuts; Windows will request administrator approval.
+- Linux: `./install-linux.sh` installs the Flatpak for your user and adds its launcher to the application menu. The initial package targets X11; Wayland remains unsupported by the current Wry integration.
+
+These preview packages are unsigned and may trigger macOS Gatekeeper or Windows SmartScreen warnings. Code signing, notarization, and public release publishing are not configured yet.
+
 ## Project notes
 
 - [Architecture](project-notes/architecture.md)
