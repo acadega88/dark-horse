@@ -21,7 +21,7 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
   - [x] Integrate pinned EasyList network rules through `adblock` and WebKit; keep local first- and third-party test rules (macOS).
   - [x] Convert a pinned EasyList/EasyPrivacy snapshot and measure rule coverage (~99.6% of parsed network filters convert; WebKit compiles both lists together). Results are in the research note.
   - [x] Test pinned EasyList rules with first- and third-party fetches, scripts, and images; blocked requests did not reach the server and allowed resources loaded (macOS WebKit harness).
-  - [ ] Manually verify the full Dark Horse app on DuckDuckGo, Google, YouTube, and other commonly used sites.
+  - [x] Manually verify the EasyList integration in the full Dark Horse app on macOS (user reports it works).
   - [ ] Decide whether to add EasyPrivacy after the EasyList compatibility check.
   - [ ] Review EasyList attribution and licensing before distributing the bundled list or application.
 - [ ] v0.1.0 — Add basic permission handling and safe downloads, then review the macOS prototype for everyday personal use.

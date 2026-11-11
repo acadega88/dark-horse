@@ -47,4 +47,5 @@ The page uses `localhost` as the third-party host when opened from `127.0.0.1`, 
 
 ## Results
 
+- macOS, 2026-11-11: the user manually verified that the EasyList integration works in the full Dark Horse app.
 - macOS, 2026-09-24: cookie, `localStorage`, and Cache API markers were absent after a full app restart. After reopening Dark Horse at 23:51, the cacheable resource was requested again at 23:52, as confirmed by a new `GET /cache-probe` in the server log. The check passed on this macOS setup; repeat it on Windows and Linux before claiming support there.

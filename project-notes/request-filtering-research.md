@@ -1,6 +1,6 @@
 # Request filtering research
 
-This note records the investigation and implementation status for v0.0.9. macOS now converts a pinned EasyList snapshot to WebKit rules and attaches it to each tab; local first- and third-party fixture checks pass in a WebKit harness. EasyPrivacy and manual compatibility checks in the full Dark Horse app remain pending.
+This note records the investigation and implementation status for v0.0.9. macOS converts a pinned EasyList snapshot to WebKit rules and attaches it to each tab. The local fixture passes in a WebKit harness, and the user reports that the full Dark Horse integration works on macOS. EasyPrivacy remains deferred.
 
 ## Project context
 
@@ -68,7 +68,7 @@ Expanded the local privacy-check fixture with first-party and third-party fetche
 1. [x] Rerun the v0.0.6 privacy restart check after writing markers, closing Dark Horse, and opening it again.
 2. [x] Check how many lines from a pinned EasyList/EasyPrivacy snapshot convert to Apple's format (see the measurement above; per-reason breakdown still open).
 3. [x] Build a local test page that requests first-party and third-party fetches, scripts, images, and tracking endpoints; EasyList plus local test rules blocked the expected URLs and allowed resources still loaded (macOS WebKit harness).
-4. [ ] Manually verify the full Dark Horse app and commonly used websites with EasyList enabled.
+4. [x] Manually verify the full Dark Horse app with EasyList enabled (user reports it works on macOS; specific sites were not listed).
 5. [ ] Decide whether to add EasyPrivacy and review attribution/licensing before distribution.
 
 ## Primary references
