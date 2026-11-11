@@ -1,6 +1,6 @@
 # Request filtering research
 
-This note records the investigation and implementation status for v0.0.9. macOS converts a pinned EasyList snapshot to WebKit rules and attaches it to each tab. The local fixture passes in a WebKit harness, and the user reports that the full Dark Horse integration works on macOS. EasyPrivacy remains deferred.
+This note records the investigation and implementation status for v0.0.9. macOS converts pinned EasyList and EasyPrivacy snapshots into one WebKit rule list and attaches it to each tab. The combined local fixture passes in a WebKit harness. The user manually verified the full app with EasyList alone; the combined lists still need manual verification.
 
 ## Project context
 
@@ -27,11 +27,11 @@ This note records the investigation and implementation status for v0.0.9. macOS 
 - WebKitGTK has `WebKitUserContentFilterStore` and `WebKitUserContentManager::add_filter` for declarative content filters.
 - Wry 0.57.0's Linux `WebViewExtUnix::webview()` exposes the underlying WebKitGTK view. The current project has not been built or tested on Linux, so the timing for attaching a filter to the existing view and whether it catches the first page load must be checked there.
 
-## Initial macOS list choice
+## Pinned macOS lists
 
-Use EasyList first, pinned at version `202611110754` and commit `949819841ca1bafa028f2304a11b34103c50cb4d`. Its network rules are converted using Brave's `adblock` 0.13.5 crate and applied through WKWebView's native content-rule API. EasyPrivacy is deferred until the first list has been manually checked with the full app.
+Use EasyList version `202611110754` (commit `949819841ca1bafa028f2304a11b34103c50cb4d`) and EasyPrivacy version `202611110743` (commit `f7cfe80ab399cb76cc9b37d8f1bbbb3a3138d2f2`). Their network rules are converted together using Brave's `adblock` 0.13.5 crate and applied through WKWebView's native content-rule API. The user verified the full app with EasyList alone; the combined lists still need manual compatibility testing.
 
-The application compiles the converted EasyList rules and appends four local first-/third-party fixture rules. It retains Wry's incognito WebView setup and attaches the compiled list before opening the requested page.
+The application compiles the converted lists and appends four local first-/third-party fixture rules. It retains Wry's incognito WebView setup and attaches the compiled list before opening the requested page.
 
 ### Prototype check
 
@@ -55,21 +55,22 @@ Measured with a throwaway program outside this repository: `adblock` 0.13.5 (MPL
 - About 99.6% of parsed network filters convert (EasyList ~99.6%, EasyPrivacy ~99.8%). Comments, cosmetic rules, and unparsed lines are not counted; cosmetic rules were excluded on purpose.
 - WebKit compiled each list alone (1.9 s and 2.2 s) and a naive concatenation of both (105,417 rules, 4.1 s) without error. This shows that this size works on this macOS version, not that no rule-count limit exists.
 - The converter reports only whether a filter converted, not why it was discarded. The crate's failure reasons include `$redirect`, `$csp`, `$removeparam`, `$badfilter`, `$generichide`, full-regex filters, `$from`/`$to` domain options, and non-ASCII rules. A per-reason breakdown was not measured.
-- Ordering matters: `into_content_blocking()` places `ignore-previous-rules` exceptions after the blocking rules. Add both lists to one `FilterSet` instead of concatenating two output files, which was only a size test.
-- Not yet measured: compatibility on everyday pages, site breakage, and repeated-launch compile cost. The local converter step took about 0.07 s; WebKit compiled EasyList in about 1.9 s. WebKit's store keeps compiled lists on disk under their identifier.
-- Pinned inputs: the bundled EasyList snapshot has SHA-256 `34584e9bbdf09a99a6ad97469b7fe42465a739849e3db978e1c4a7e75c41459a`; the previously measured EasyPrivacy snapshot has SHA-256 `5bf871496066c7d589f49885971e4dc100868acb5579d41505917d95047e023f` and is not bundled.
+- Ordering matters: `into_content_blocking()` places `ignore-previous-rules` exceptions after the blocking rules. The application adds both lists to one `FilterSet` to preserve this ordering.
+- Not yet measured: compatibility on everyday pages, site breakage, and repeated-launch compile cost for the combined list. The local converter step took about 0.07 s; WebKit compiled EasyList alone in about 1.9 s. WebKit's store keeps compiled lists on disk under their identifier.
+- Pinned inputs: EasyList SHA-256 `34584e9bbdf09a99a6ad97469b7fe42465a739849e3db978e1c4a7e75c41459a`; EasyPrivacy SHA-256 `5bf871496066c7d589f49885971e4dc100868acb5579d41505917d95047e023f`.
 
 ## Local WebKit behavior check (2026-11-11, macOS)
 
-Expanded the local privacy-check fixture with first-party and third-party fetches, scripts, and images. A temporary WKWebView harness compiled the `adblock` 0.13.5 output for the pinned EasyList, appended the four fixture rules, loaded the page from `127.0.0.1`, and ran the test button. All six result groups passed: both allowed fetches and all four script/image assets loaded; `/blocked-resource` and `/third-party-blocked-resource` each had server count 0. Allowed fetches each had count 1, and all four asset requests reached the server. This validates the generated rules in WKWebView, not the full Dark Horse/Wry application or compatibility with real sites.
+Expanded the local privacy-check fixture with first-party and third-party fetches, scripts, and images. A temporary WKWebView harness compiled the combined `adblock` 0.13.5 output for both pinned lists, appended the four fixture rules, loaded the page from `127.0.0.1`, and ran the test button. All six result groups passed: both allowed fetches and all four script/image assets loaded; `/blocked-resource` and `/third-party-blocked-resource` each had server count 0. Allowed fetches each had count 1, and all four asset requests reached the server. The 105,420-rule combined list compiled and passed the fixture in WKWebView; this does not establish compatibility with everyday sites or the full Dark Horse/Wry app.
 
 ## Next validation steps
 
 1. [x] Rerun the v0.0.6 privacy restart check after writing markers, closing Dark Horse, and opening it again.
 2. [x] Check how many lines from a pinned EasyList/EasyPrivacy snapshot convert to Apple's format (see the measurement above; per-reason breakdown still open).
-3. [x] Build a local test page that requests first-party and third-party fetches, scripts, images, and tracking endpoints; EasyList plus local test rules blocked the expected URLs and allowed resources still loaded (macOS WebKit harness).
+3. [x] Build a local test page that requests first-party and third-party fetches, scripts, images, and tracking endpoints; both lists plus local test rules blocked the expected URLs and allowed resources still loaded (macOS WebKit harness).
 4. [x] Manually verify the full Dark Horse app with EasyList enabled (user reports it works on macOS; specific sites were not listed).
-5. [ ] Decide whether to add EasyPrivacy and review attribution/licensing before distribution.
+5. [ ] Manually verify the full Dark Horse app with EasyList and EasyPrivacy together.
+6. [ ] Review attribution/licensing before distribution.
 
 ## Primary references
 

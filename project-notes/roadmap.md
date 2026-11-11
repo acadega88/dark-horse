@@ -19,10 +19,10 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
 - [ ] v0.0.9 — Add request filtering and basic ad/tracker blocking; this is a core project feature (macOS).
   - Research findings: [request-filtering-research.md](request-filtering-research.md)
   - [x] Integrate pinned EasyList network rules through `adblock` and WebKit; keep local first- and third-party test rules (macOS).
-  - [x] Convert a pinned EasyList/EasyPrivacy snapshot and measure rule coverage (~99.6% of parsed network filters convert; WebKit compiles both lists together). Results are in the research note.
-  - [x] Test pinned EasyList rules with first- and third-party fetches, scripts, and images; blocked requests did not reach the server and allowed resources loaded (macOS WebKit harness).
+  - [x] Convert pinned EasyList and EasyPrivacy snapshots and measure rule coverage (~99.6% of parsed network filters convert). Results are in the research note.
+  - [x] Test the combined rules with first- and third-party fetches, scripts, and images; blocked requests did not reach the server and allowed resources loaded (macOS WebKit harness).
   - [x] Manually verify the EasyList integration in the full Dark Horse app on macOS (user reports it works).
-  - [ ] Decide whether to add EasyPrivacy after the EasyList compatibility check.
+  - [ ] Manually verify the full Dark Horse app with EasyList and EasyPrivacy together.
   - [ ] Review EasyList attribution and licensing before distributing the bundled list or application.
 - [ ] v0.1.0 — Add basic permission handling and safe downloads, then review the macOS prototype for everyday personal use.
 

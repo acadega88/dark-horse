@@ -35,7 +35,7 @@ With the server running, open either local address in Dark Horse and click **Run
 - Third-party `/third-party-blocked-resource`: blocked; server count is 0.
 - First- and third-party JavaScript and image assets: all load; each asset count is 1.
 
-The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies EasyList plus the local test rules for these requests; it does not establish compatibility with everyday websites.
+The page uses `localhost` as the third-party host when opened from `127.0.0.1`, and vice versa. The server terminal is a secondary check: it should show only requests expected to be allowed, never either blocked endpoint. This verifies EasyList, EasyPrivacy, and the local test rules for these requests; it does not establish compatibility with everyday websites.
 
 ## What this does and does not verify
 
@@ -48,4 +48,5 @@ The page uses `localhost` as the third-party host when opened from `127.0.0.1`, 
 ## Results
 
 - macOS, 2026-11-11: the user manually verified that the EasyList integration works in the full Dark Horse app.
+- macOS, 2026-11-11: the combined EasyList and EasyPrivacy rules passed the local WebKit harness; full-app verification with the combined lists is pending.
 - macOS, 2026-09-24: cookie, `localStorage`, and Cache API markers were absent after a full app restart. After reopening Dark Horse at 23:51, the cacheable resource was requested again at 23:52, as confirmed by a new `GET /cache-probe` in the server log. The check passed on this macOS setup; repeat it on Windows and Linux before claiming support there.

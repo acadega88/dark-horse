@@ -7,8 +7,9 @@ use objc2::MainThreadMarker;
 use objc2_foundation::{NSError, NSString};
 use objc2_web_kit::{WKContentRuleList, WKContentRuleListStore, WKUserContentController};
 
-const RULE_LIST_ID: &str = "dark-horse-v0.0.9-easylist-202611110754";
+const RULE_LIST_ID: &str = "dark-horse-v0.0.9-easylist-202611110754-easyprivacy-202611110743";
 const EASYLIST: &str = include_str!("../../assets/easylist-202611110754.txt");
+const EASYPRIVACY: &str = include_str!("../../assets/easyprivacy-202611110743.txt");
 const TEST_RULES: &str = r#"[
   {
     "trigger": {
@@ -45,9 +46,10 @@ fn encoded_rules() -> Result<String, String> {
     };
     let mut filter_set = FilterSet::new(true);
     filter_set.add_filter_list(EASYLIST.to_owned(), options);
-    let (mut rules, _) = filter_set
-        .into_content_blocking()
-        .map_err(|_| "Could not convert EasyList rules to WebKit format.".to_owned())?;
+    filter_set.add_filter_list(EASYPRIVACY.to_owned(), options);
+    let (mut rules, _) = filter_set.into_content_blocking().map_err(|_| {
+        "Could not convert EasyList and EasyPrivacy rules to WebKit format.".to_owned()
+    })?;
     let test_rules: Vec<CbRule> = serde_json::from_str(TEST_RULES)
         .map_err(|error| format!("Could not add local request-filter tests: {error}"))?;
     rules.extend(test_rules);
@@ -146,12 +148,13 @@ mod tests {
     use super::{CbRule, encoded_rules};
 
     #[test]
-    fn easylist_converts_to_webkit_rules_and_keeps_local_fixture_rules() {
-        let encoded_rules = encoded_rules().expect("EasyList should convert to WebKit rules");
+    fn easylist_and_easyprivacy_convert_to_webkit_rules_with_local_fixture_rules() {
+        let encoded_rules =
+            encoded_rules().expect("EasyList and EasyPrivacy should convert to WebKit rules");
         let rules: Vec<CbRule> =
             serde_json::from_str(&encoded_rules).expect("converted rules should be valid JSON");
 
-        assert!(rules.len() > 48_000);
+        assert!(rules.len() > 100_000);
         assert!(rules.iter().any(|rule| {
             rule.trigger.url_filter == "^http://127\\.0\\.0\\.1:8765/blocked-resource$"
         }));

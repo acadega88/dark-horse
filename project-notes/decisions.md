@@ -88,6 +88,10 @@ For v0.0.9, block requests on macOS with WebKit's native `WKContentRuleList`, at
 
 Use the pinned EasyList snapshot `202611110754` for the first macOS filtering pass. Convert network rules locally with Brave's `adblock` crate and apply them through WebKit; do not download lists while browsing. Keep EasyPrivacy deferred until EasyList compatibility has been checked manually. The source file retains its upstream header and attribution. Review EasyList's GPL-3.0-or-later / CC BY-SA 3.0-or-later terms before distributing the bundled list or application.
 
+## 2026-11-11 — Add pinned EasyPrivacy
+
+After manually verifying the EasyList integration, include pinned EasyPrivacy snapshot `202611110743` as well. Convert both lists through one `FilterSet` so exception rules retain the converter's ordering. Keep list updates manual and local; verify the combined rules in the full app before considering v0.0.9 complete.
+
 ## 2026-09-25 — Password-manager direction
 
 Treat password-manager support as a later feature. Evaluate established open-source password managers and their integration options before implementation. Do not create a custom password vault or cryptography as a first step; verify that any proposed browser integration works with Wry and meets the project's privacy goals.
