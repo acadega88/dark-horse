@@ -33,6 +33,17 @@ From the project directory, use the terminal:
 cargo run
 ```
 
+## Install packages
+
+The **Build desktop packages** GitHub Actions workflow builds macOS, Windows, and Linux packages on native runners. Pull requests and manual runs upload preview artifacts; pushing a `v*` tag publishes the packages and generated package-manager metadata to a GitHub Release. It does not install Dark Horse on the build machine or submit packages to third-party catalogs.
+
+- Ubuntu/Debian: download the `.deb` from a GitHub Release, then run `sudo apt install ./dark-horse-linux-amd64.deb`.
+- Arch: the source recipe is in `packaging/aur/PKGBUILD`; after it is published to AUR, install with `yay -S dark-horse-git`.
+- macOS: the release includes a Homebrew Cask recipe; after it is added to a Homebrew tap, install with `brew install --cask dark-horse`.
+- Windows: the release includes an Inno Setup installer and WinGet manifests; after the manifest is submitted to the WinGet community repository, install with `winget install Acadega88.DarkHorse`.
+
+Homebrew, AUR, and WinGet listings require separate catalog publication and are not submitted by this workflow. The packages are unsigned; macOS Gatekeeper and Windows SmartScreen may show warnings. Signing/notarization and public catalog submissions remain follow-up work. The initial Linux target is X11; Wayland is not supported by the current Wry integration.
+
 ## Project notes
 
 - [Architecture](project-notes/architecture.md)
