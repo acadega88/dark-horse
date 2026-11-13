@@ -24,12 +24,15 @@ The roadmap is a learning guide, not a fixed contract. Each stage should remain 
   - [x] Manually verify the combined EasyList and EasyPrivacy integration in the full Dark Horse app on macOS (user reports it works).
   - [ ] Review EasyList and EasyPrivacy attribution/licensing before distributing the bundled lists or application.
 - [ ] v0.1.0 — Make Dark Horse installable and launchable from the terminal on macOS, Windows, and Linux.
-  - [ ] Build platform packages on native GitHub Actions runners.
-  - [ ] macOS: build a universal `.dmg` and generate a Homebrew Cask recipe; publish it through a tap.
-  - [ ] Windows: build an Inno Setup installer with Start menu/desktop shortcuts and generate WinGet manifests; submit the manifest.
-  - [ ] Ubuntu/Debian: build a `.deb` package installable with `sudo apt install ./package.deb`.
+  - [x] Configure native GitHub Actions runners to build macOS, Windows, and Ubuntu/Debian packages and retain them as workflow artifacts.
+  - [x] macOS: configure a universal `.dmg` build and generate a Homebrew Cask recipe.
+    - [ ] Publish the Cask through a tap.
+  - [x] Windows: configure an Inno Setup installer with Start menu/desktop shortcuts and generate WinGet manifests.
+    - [ ] Submit the manifest.
+  - [x] Ubuntu/Debian: configure a `.deb` package build intended for installation with `sudo apt install ./package.deb`.
   - [ ] Arch: prepare and publish the AUR recipe for `yay -S dark-horse-git`.
-  - [ ] Publish version-tagged package artifacts to GitHub Releases and document WebView2 Runtime requirements.
+  - [x] Configure version-tagged package artifacts to publish to GitHub Releases.
+  - [ ] Verify package builds and release publishing on GitHub Actions; document WebView2 Runtime requirements.
   - [ ] Manually test installation, launching, and removal on each target OS before claiming support.
 - [ ] v0.1.1 — Add basic permission handling and safe downloads, then review the browser for everyday personal use.
 
